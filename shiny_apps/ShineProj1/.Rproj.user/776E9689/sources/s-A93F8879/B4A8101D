@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513052695843.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B4A8101D",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1513052695843,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "9242433A",
+        "caption" : "mung",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=mung&cache_key=9242433A",
+        "displayedObservations" : "87949",
+        "environment" : "",
+        "object" : "mung",
+        "preview" : "0",
+        "totalObservations" : "87949",
+        "variables" : "95"
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "library(dplyr)\nlibrary(maps)\nlibrary(mapproj)\nlibrary(ggplot2)\ngusa <- map_data(\"state\")\nif (! file.exists(\"PEP_2016_PEPANNRES.zip\")) {\n  download.file(\"http://www.stat.uiowa.edu/~luke/data/PEP_2016_PEPANNRES.zip\",\n                \"PEP_2016_PEPANNRES.zip\")\n  unzip(\"PEP_2016_PEPANNRES.zip\")\n}\nncls <- 6\nspr <- transform(spr,\n                 pcls = cut(pop, quantile(pop, seq(0, 1, len = ncls)),\n                            include.lowest = TRUE))\ngusa_rpop <- merge(gusa, spr)\npep2016 <- read.csv(\"PEP_2016_PEPANNRES_with_ann.csv\", stringsAsFactors = FALSE)\n\ngcounty <- map_data(\"county\")\n\ngcounty_polyname <- with(gcounty, paste(region, subregion, sep = \",\"))\nidx <- match(gcounty_polyname, county.fips$polyname)\ngcounty$fips <- county.fips$fips[idx]\nhead(gcounty)\n\ncpop <- select(pep2016,\n               fips = GEO.id2,\n               pop10 = rescen42010,\n               pop16 = respop72016)\ncpop <- transform(cpop, rpop16 = rank(pop16))\ncpop <- transform(cpop,\n                  pcls16 = cut(pop16, quantile(pop16, seq(0, 1, len = ncls)),\n                               include.lowest = TRUE))\nhead(cpop)\n\nunique(gcounty_polyname[which(! (gcounty$fips %in% cpop$fips))])\n\ngcounty_pop <- merge(gcounty, cpop, all.x = TRUE)\ngcounty_pop <- arrange(gcounty_pop, order)\ngcounty_pop <- left_join(gcounty, cpop)\n\nggplot(gcounty_pop) +\n  geom_polygon(aes(long, lat, group = group, fill = rpop16),\n               color = \"grey\", size = 0.1) +\n  geom_polygon(aes(long, lat, group = group),\n               fill = NA, data = gusa, color = \"lightgrey\") +\n  coord_map(\"bonne\", parameters=45) + ggthemes::theme_map()\n\n",
+    "created" : 1508868209548.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2332548531",
+    "id" : "29DAE337",
+    "lastKnownWriteTime" : 1508953041,
+    "last_content_update" : 1508953041,
+    "path" : "~/Documents/shiny1/countymap4.R",
+    "project_path" : "countymap4.R",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

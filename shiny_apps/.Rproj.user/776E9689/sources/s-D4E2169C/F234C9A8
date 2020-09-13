@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1517537117287.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F234C9A8",
+    "lastKnownWriteTime" : 4707068280,
+    "last_content_update" : 1517537117287,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A3C0E529",
+        "caption" : "wine_quality_missing",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=wine_quality_missing&cache_key=A3C0E529",
+        "displayedObservations" : 178,
+        "environment" : "",
+        "object" : "wine_quality_missing",
+        "preview" : 0,
+        "totalObservations" : 178,
+        "variables" : 14
+    },
+    "relative_order" : 12,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

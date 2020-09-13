@@ -1,0 +1,176 @@
+library(twitteR)
+library(tidyr)
+library(ggplot2)
+library(quantmod)
+library(randomForest)
+
+moving_average = function(stock_data, col = 1, lag_len = 2, replacement = "moving_average"){
+  stock_data$moving_average = stock_data[,col]
+    for(x in (lag_len + 1):nrow(stock_data)){
+      dex = c((x - lag_len):x)
+      stock_data$moving_average[x] = mean(stock_data[dex, col])
+    }
+  colnames(stock_data)[which(colnames(stock_data) == "moving_average")] = replacement
+  return(stock_data)
+}
+
+
+process_stock = function(ticker = "AAPL"){
+  dta = getSymbols(ticker, auto.assign = F)
+  comps = rep(ticker, nrow(dta))
+  #print(rep(ticker, nrow(dta)))
+  colnames(dta) = c("Open", "High", "Low", "Close", "Volume", "Adjusted")
+  dta$close_diff = diff.xts(dta$Close)
+  dta$close_diff_pct = dta$close_diff / lag.xts(dta$Close)
+  dta$close_diff_pct2 = diff.xts(dta$close_diff_pct)
+  dta$open_diff = diff.xts(dta$Open)
+  dta$open_diff_pct = dta$open_diff / lag.xts(dta$Open)
+  dta = data.frame(dta)
+  dta$date = as.Date(row.names(dta))
+  dta$Company = comps
+  dta = moving_average(dta, col = which(colnames(dta) == "close_diff_pct2"), lag_len = 10, replacement = "moving_average2")
+  dta = moving_average(dta, col = which(colnames(dta) == "close_diff_pct"), lag_len = 10, replacement = "moving_average_close")
+  dta = moving_average(dta, col = which(colnames(dta) == "open_diff_pct"), lag_len = 10, replacement = "moving_average_open")
+  return(dta)
+}
+
+process_stock_more = function(stock_data = dtaA, nlags = 1, lag_len = 1){
+  company = stock_data$Company[1]
+  stock_data = stock_data[,-which(colnames(stock_data) == "Company")]
+  stock_data = stock_data[,-which(colnames(stock_data) == "date")]
+  stock_data = stock_data[-c(1:10),]
+  
+  for(y in 1:ncol(stock_data)){
+    for(lg in nlags){
+      stock_data$x =lag.xts( stock_data[,y], lag_len)
+      name = paste(colnames(stock_data)[y], "l", lg, sep = ".")
+      colnames(stock_data)[which(colnames(stock_data) == "x")] = name
+    } 
+  }
+  stock_data$next_3_day_high_max = apply(cbind(lag.xts(stock_data$High, -1), lag.xts(stock_data$High, -2), lag.xts(stock_data$High, -3)), 1, FUN = max)
+  stock_data$next_3_day_high_mean = apply(cbind(lag.xts(stock_data$High, -1), lag.xts(stock_data$High, -2), lag.xts(stock_data$High, -3)), 1, FUN = mean)
+  stock_data$next_5_day_high_max = apply(cbind(lag.xts(stock_data$High, -1), lag.xts(stock_data$High, -2), lag.xts(stock_data$High, -3), lag.xts(stock_data$High, -4), lag.xts(stock_data$High, -5)), 1, FUN = max)
+  stock_data$next_5_day_high_mean = apply(cbind(lag.xts(stock_data$High, -1), lag.xts(stock_data$High, -2), lag.xts(stock_data$High, -3), lag.xts(stock_data$High, -4), lag.xts(stock_data$High, -5)), 1, FUN = mean)
+  
+  stock_data$next_3_day_low_min = apply(cbind(lag.xts(stock_data$Low, -1), lag.xts(stock_data$Low, -2), lag.xts(stock_data$Low, -3)), 1, FUN = min)
+  stock_data$next_3_day_low_mean = apply(cbind(lag.xts(stock_data$Low, -1), lag.xts(stock_data$Low, -2), lag.xts(stock_data$Low, -3)), 1, FUN = mean)
+  stock_data$next_5_day_low_min = apply(cbind(lag.xts(stock_data$Low, -1), lag.xts(stock_data$Low, -2), lag.xts(stock_data$Low, -3), lag.xts(stock_data$Low, -4), lag.xts(stock_data$Low, -5)), 1, FUN = min)
+  stock_data$next_5_day_low_mean = apply(cbind(lag.xts(stock_data$Low, -1), lag.xts(stock_data$Low, -2), lag.xts(stock_data$Low, -3), lag.xts(stock_data$Low, -4), lag.xts(stock_data$Low, -5)), 1, FUN = mean)
+  
+  stock_data$next_high = lag.xts(stock_data$High, -1)
+  stock_data$next_low = lag.xts(stock_data$Low, -1)
+  stock_data = stock_data[,c(ncol(stock_data):(ncol(stock_data) - 1), 1:(ncol(stock_data) -2))]
+  return(stock_data)
+}
+'
+dtaA2 = process_stock_more()
+dtaA2sub = dtaA2[c(10:nrow(dtaA2)),c(2:30)]
+forest1 = randomForest(data = dtaA2sub[-c(2700:2741),], next_high ~ .)
+pred = predict(forest1,dtaA2sub )
+dtaA2sub$date = as.Date(rownames(dtaA2)[c(10:nrow(dtaA2))])'
+#ggplot(subset(dtaA, date > "2017-1-1") , aes(date, close_diff_pct)) + geom_path() + geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, moving_average), col = "red")+ geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, moving_average2), col = "blue") + geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, close_diff_pct2), col = "orange")
+#ggplot(subset(dtaA, date > "2017-1-1"))+ geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, close_diff_pct), col = "blue") + geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, close_diff_pct2), col = "orange")
+
+#ggplot(subset(dtaA, date > "2017-1-1") , aes(date, close_diff_pct)) + geom_path() + geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, moving_average_close), col = "red")
+#ggplot(subset(dtaA, date > "2017-1-1") , aes(date, open_diff_pct)) + geom_path() + geom_path(data = subset(dtaA, date > "2017-1-1") , aes(date, moving_average_open), col = "red")
+
+simulate_trading = function(stock_data, money = 100, stock = 0){
+  
+  stock_data = stock_data[-c(1:20),]
+   trade_gap_open = rep(0, nrow(stock_data))
+   trade_gap_close = rep(0, nrow(stock_data))
+   price_owned = rep(0, nrow(stock_data))
+   price_sold = rep(0, nrow(stock_data))
+   amount_owned = rep(0, nrow(stock_data))
+   bought = rep(0, nrow(stock_data))
+   sold = rep(0, nrow(stock_data))
+   monies = rep(0, nrow(stock_data))
+   stocks = rep(0, nrow(stock_data))
+   buy = F
+   sell = F
+   
+   buy_condition = function(buy, money){
+     if(buy == T & money > 0){
+       return(TRUE)
+     } else {
+       return(FALSE)
+     }
+   }
+   
+   buy_stock = function(){
+     
+     print(x)
+     price_owned[x] = stock_data$Open[x]
+     stock = money / stock_data$Open[x]
+     amount_owned[x] = stock
+     money = 0
+     buy = F
+     sell = T
+   }
+   
+  sell_condition = function(sell, stock){
+    if(sell == T & stock > 0){
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  }
+   
+   for(x in 1:nrow(stock_data)){
+     trade_gap_openx = stock_data$open_diff_pct[x] - stock_data$moving_average_open[x]
+     trade_gap_open[x] = trade_gap_openx
+     if(trade_gap_openx < 0){
+       buy = T
+     } else {
+       buy = F
+     }
+     
+     if(buy_condition(buy = buy, money = money) == T){
+       
+       
+       #print(x)
+       #price_owned[x] = stock_data$Open[x]
+       #stock = money / stock_data$Open[x]
+       #amount_owned[x] = stock
+       #money = 0
+       #buy = F
+       #sell = T
+       #bought[x] = T
+     } else {
+       bought[x] = F
+     }
+     trade_gap_closex = stock_data$close_diff_pct[x] - stock_data$moving_average_close[x]
+     trade_gap_close[x] = trade_gap_closex
+     if(trade_gap_closex > 0){
+       sell = T
+     } else {
+       sell = F
+     }
+     if(sell_condition(sell, stock)){
+       price_sold[x] = stock_data$Close[x]
+       money = stock * stock_data$Close[x]
+       stock = 0
+       amount_owned[x] = stock
+       buy = T
+       sell = F 
+       sold[x] = T
+     } else {
+       sold[x] = F
+     }
+     monies[x] = money
+     stocks[x] = stock
+   }
+   stock_data = cbind(stock_data, trade_gap_open, bought, amount_owned, price_owned, trade_gap_close, sold, price_sold, monies, stocks)
+   'trade_gap_open = rep(0, nrow(stock_data))
+   trade_gap_close = rep(0, nrow(stock_data))
+   price_owned = rep(0, nrow(stock_data))
+   price_sold = rep(0, nrow(stock_data))
+   amount_owned = rep(0, nrow(stock_data))
+   bought = rep(0, nrow(stock_data))
+   sold = rep(0, nrow(stock_data))'
+   return(stock_data)
+ } 
+  
+
+dtaP2 = simulate_trading(dtaA)
+ 

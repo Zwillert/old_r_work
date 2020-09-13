@@ -1,0 +1,153 @@
+library(wbstats)
+options(warn=-1)
+
+pop_for_v = function(conflic_d, c_name, pop_d){
+  conflic_d$pops = 0
+  for (x in 1:nrow(conflic_d)) {
+    #print(conflic_d$country[x] )
+    #print(pop_d$country)
+   #if(error){next}
+    
+    p = pop_d$value[which(pop_d$country == conflic_d$country[x] & pop_d$date == conflic_d$Year_start[x])]
+if(length(p) > 0){
+    conflic_d$pops[x] = p
+}
+    
+    }
+  
+  return(conflic_d)
+}
+
+expand_all_rates = function(conflict_dyad_data){
+  popd = wb(indicator = "SP.POP.TOTL")
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48, 54)]
+  conflict_dyad_data = pop_for_v(conflict_dyad_data, pop_d = popd)
+  #nr = nrow(conflict_dyad_data)
+  dyads = unique(conflict_dyad_data$dyad_dset_id)
+  dyad_death = c()
+  d_time = c()
+  for(x in dyads){
+    dex = which(conflict_dyad_data$dyad_dset_id == x)
+    #pop_v = 
+    est = sum(conflict_dyad_data$best_est[dex]/conflict_dyad_data$pops[dex] )
+    #print(conflict_dyad_data$rel_risk_tot)
+    time = max(conflict_dyad_data$time_count[dex]) - min(conflict_dyad_data$time_count[dex])
+    dyad_death = c(dyad_death, est)
+    d_time = c(d_time, time)
+    #print(dyad_death)
+    print(x/nrow(conflict_dyad_data))
+  }
+  mat = cbind(dyads, dyad_death, d_time)
+  print(mat)
+  colnames(mat) = c("dyad", "deaths", "days")
+  mat = data.frame(mat)
+  mat = mat[which(mat$days > 0),]
+  mat$rate = mat$deaths/mat$days
+  #mat[which(mat$side == 1),3] = sa
+  #mat[which(mat$side == 2),3] = sb
+  return(mat)
+  
+}
+
+
+
+expand_death_sides = function(conflict_dyad_data){
+  sa = conflict_dyad_data$side_a
+  sb = conflict_dyad_data$side_b
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48)]
+  nr = nrow(conflict_dyad_data)
+  lats = c()
+  lons = c()
+  side = c()
+  for(x in 1:nr){
+    d_a= conflict_dyad_data$rel_riska[x]
+    d_b= conflict_dyad_data$rel_riskb[x]
+    d_c = conflict_dyad_data$deaths_civilians[x]
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_a))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_a))
+    side = c(side, rep(1, d_a))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_b))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_b))
+    side = c(side, rep(2, d_b))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_c))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_c))
+    side = c(side, rep(3, d_c))
+    
+    print(x/nrow(conflict_dyad_data))
+  }
+  mat = cbind(lats, lons, side)
+  colnames(mat) = c("latitude", "longitude", "side")
+  mat = data.frame(mat)
+  return(mat)
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+expand_all_rates = function(conflict_dyad_data, num){
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48, 54)]
+  dyads = unique(conflict_dyad_data$dyad_dset_id)
+  dyad_death = c()
+  d_time = c()
+  for(x in dyads){
+    dex = which(conflict_dyad_data$dyad_dset_id == x)
+    esta = sum(conflict_dyad_data$deaths_a/num)
+    #print(conflict_dyad_data$rel_risk_tot)
+    time = max(conflict_dyad_data$time_count[dex]) - min(conflict_dyad_data$time_count[dex])
+    dyad_death = c(dyad_death, est)
+    d_time = c(d_time, time)
+    print(x/nrow(conflict_dyad_data))
+  }
+  mat = cbind(dyads, dyad_death, d_time)
+  print(mat)
+  colnames(mat) = c("dyad", "deaths", "days")
+  mat = data.frame(mat)
+  mat = mat[which(mat$days > 0),]
+  mat$rate = mat$deaths/mat$days
+  return(c(mat, num))
+  
+}
+
+
+
+
+exps = function(conflict_dyad_data, num){
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48, 54)]
+  #nr = nrow(conflict_dyad_data)
+  dyads = unique(conflict_dyad_data$dyad_dset_id)
+  dyad_deatha = c()
+  dyad_deathb = c()
+  d_time = c()
+  for(x in dyads){
+    dex = which(conflict_dyad_data$dyad_dset_id == x)
+    esta = sum(conflict_dyad_data$deaths_a)
+    estb = sum(conflict_dyad_data$deaths_b)
+    #print(conflict_dyad_data$rel_risk_tot)
+    time = max(conflict_dyad_data$time_count[dex]) - min(conflict_dyad_data$time_count[dex])
+    dyad_deatha = c(dyad_deatha, esta)
+    dyad_deathb = c(dyad_deathb, estb)
+    d_time = c(d_time, time)
+    #print(dyad_death)
+    print(x/nrow(conflict_dyad_data))
+  }
+  mat = cbind(dyads, dyad_deatha,dyad_deathb, d_time)
+  print(mat)
+  colnames(mat) = c("dyad", "deaths_a", "deaths_b", "days")
+  mat = data.frame(mat)
+  mat = mat[which(mat$days > 0),]
+  mat$rate = mat$deaths/mat$days
+  #mat[which(mat$side == 1),3] = sa
+  #mat[which(mat$side == 2),3] = sb
+  return(c(mat, num))
+  
+}

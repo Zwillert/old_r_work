@@ -1,0 +1,297 @@
+library(dplyr)
+library(readr)
+library(stringr)
+library(tidyr)
+library(readxl)
+library(classInt)
+library(RColorBrewer)
+library(maptools)
+library(readr)
+library(plotly)
+library(ggplot2)
+new_county_election_2016 <- read_excel("~/Downloads/new_county_election_2016.xlsx")
+countydata <- read.csv("~/Documents/shiny1/countydata.csv")
+#
+gc <- merge(countydata, new_county_election_2016, all.x = TRUE)
+gc <- arrange(gc, order)
+gc <- left_join(countydata, new_county_election_2016)
+
+cpop2 = cbind(new_county_election_2016$CountyCode, new_county_election_2016)
+for(n in c(6:12)){
+cpop2[,n] = as.numeric(cpop2[,n])
+}
+names(cpop2)[1] = "fips"
+
+gcounty_pop <- merge(gcounty, cpop2, all.x = TRUE)
+gcounty_pop <- arrange(gcounty_pop, order)
+gcounty_pop <- left_join(gcounty, cpop2)
+
+
+dct = countydata[,-1]
+
+gcounty_pop <- merge(dct, cpop2, all.x = TRUE)
+gcounty_pop <- arrange(gcounty_pop, order)
+gcounty_pop <- left_join(dct, cpop2)
+
+fullcdta = gcounty_pop
+#write.csv(fullcdta, "full_county_data.csv")
+
+
+cpop2$cl_spread = (cpop2$Clinton - cpop2$Trump)
+cpop2 = left_join(cpop2, mydta, by = c("fips" = "fips"))
+
+#full_county_data <- read.csv("~/Documents/shiny1/full_county_data.csv")
+library(shiny)
+library(ggplot2)
+
+full_county_data$cl_pct = full_county_data$Clinton/(full_county_data$Clinton + full_county_data$Trump)
+full_county_data$cl_spread = (full_county_data$Clinton - full_county_data$Trump)
+  
+countydata <- full_county_data
+
+count_data_types = names(countydata[c(13:length(names(countydata)))])
+#count_data_types = names(countydata)
+countydata$region = as.character(countydata$region)
+ui = navbarPage( 
+  # Application title
+  title = ("County Data"),
+  
+  tabPanel("Map",
+           # sidebarPanel(
+           selectInput("data_type",
+                       "Data Type:", 
+                       count_data_types, selected = "below_poverty_line"),
+           
+           
+           selectInput("transformation",
+                       "Data transformation:", 
+                       c("standard", "difference from average", "logged val"), selected = "standard")
+           
+           ,
+           selectInput("state",
+                       "State:", 
+                       c("nation", unique(countydata$region)), selected = "nation"),
+           submitButton(),
+           
+           # ),
+           # Show a plot of the generated distribution
+           # mainPanel(
+           
+           
+           plotOutput("distPlot"), 
+           plotOutput("elecPlot"),
+           plotOutput("residPlot") 
+           #  plotOutput("distPlot")
+           
+  ),
+  tabPanel("Regression",
+           # sidebarPanel(
+           selectInput("var1",
+                       "X- Axis:", 
+                       count_data_types, selected = "below_poverty_line"),
+           selectInput("var2",
+                       "Y- Axis:", 
+                       count_data_types, selected = "below_poverty_line"),
+           
+           selectInput("var3",
+                       "Color:", 
+                       c("none", count_data_types), selected = "none"),
+           
+           
+           selectInput("model",
+                       "Model:", 
+                       c("linear", "difference from average", "logged val"), selected = "standard"),
+           submitButton("Apply Changes"),
+           plotOutput("regPlot"), 
+           #  plotOutput("distPlot")
+           textOutput("regRes" ) #,container = if (inline) span else div, inline = FALSE) )
+  )
+)
+#) 
+
+server = function(input, output){
+  
+  output$regRes <- renderPrint({
+    var1 = which(names(countydata) == input$var1)
+    var2 = which(names(countydata) == input$var2)
+    var1 = countydata[,var1]
+    var2 = countydata[,var2]
+    model = input$model
+    print(summary(lm(var1~var2)))
+    #return(unlist(summary(lm(var1~var2))))
+  })
+  
+  output$regPlot <- renderPlot({ 
+    var1 = which(names(countydata) == input$var1)
+    var2 = which(names(countydata) == input$var2)
+    var3 = which(names(countydata) == input$var3)
+    var1 = countydata[,var1]
+    var2 = countydata[,var2]
+    var3 = countydata[,var3]
+    model = input$model 
+    col = input$var3
+    if(col == "none"){
+      var3 = "black"
+      #ggplot(countydata, aes(var1, var2)) + geom_point() + xlab(input$var1) + ylab(input$var2)
+    } else {
+    }
+    ggplot(countydata, aes(var1, var2, color = var3)) + geom_point() + xlab(input$var1) + ylab(input$var2)
+    
+  }) 
+  
+  output$distPlot <- renderPlot({
+    inpval = which(names(countydata) == input$data_type)
+    inptype = input$transformation
+    region = input$state
+    dex = which(!is.na(countydata))
+    mapend = coord_map("bonne", parameters=45)
+    mapfill = scale_fill_distiller(palette = "RdBu", direction = 1) 
+    mapguide = guides(fill=guide_legend(title=input$data_type))
+    #  ggplot(countydata) + geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval]),color = "grey", size = 0.1) + coord_map("bonne", parameters=45)+ scale_fill_distiller(palette = "Reds", direction = 1) + guides(fill=guide_legend(title=input$Year))
+    if(region != "nation"){
+      dex = which(countydata$region == region)
+      mapbase = ggplot(countydata[dex,])
+      print("howdy")
+    } else {
+      dex = c(1:nrow(countydata))
+      mapbase = ggplot(countydata)
+    }
+    mapbase = ggplot(countydata[dex,])
+    meanv = mean(na.omit(countydata[dex,inpval]))
+    #mapbase + mapmid + mapend + mapfill + mapguide
+    if(inptype == "standard"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,inpval]),color = "grey", size = 0.1) 
+      
+    } 
+    if(inptype == "difference from average"){
+      #print(countydata[dex,inpval] - mean(countydata[dex,inpval]))
+      print(meanv)
+      val = (countydata[dex,inpval] - meanv)
+      print(head(val))
+      print(length(dex))
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval] - meanv),color = "grey", size = 0.1) 
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = val),color = "grey", size = 0.1) 
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,inpval]-meanv),color = "grey", size = 0.1) 
+    }
+    
+    if(inptype == "logged val"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = log(countydata[dex,inpval])),color = "grey", size = 0.1) 
+    }
+    mapbase + mapmid + mapend + mapfill + mapguide
+  })
+  
+  output$elecPlot <- renderPlot({
+    inpval = which(names(countydata) == "cl_spread")
+    inptype = input$transformation
+    region = input$state
+    dex = which(!is.na(countydata))
+    mapend = coord_map("bonne", parameters=45)
+    mapfill = scale_fill_distiller(palette = "RdBu", direction = 1) 
+    mapguide = guides(fill=guide_legend(title=input$data_type))
+    #  ggplot(countydata) + geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval]),color = "grey", size = 0.1) + coord_map("bonne", parameters=45)+ scale_fill_distiller(palette = "Reds", direction = 1) + guides(fill=guide_legend(title=input$Year))
+    if(region != "nation"){
+      dex = which(countydata$region == region)
+      mapbase = ggplot(countydata[dex,])
+      print("howdy")
+    } else {
+      dex = c(1:nrow(countydata))
+      mapbase = ggplot(countydata)
+    }
+    mapbase = ggplot(countydata[dex,])
+    meanv = mean(na.omit(countydata[dex,inpval]))
+    #mapbase + mapmid + mapend + mapfill + mapguide
+    if(inptype == "standard"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,inpval]),color = "grey", size = 0.1) 
+      
+    } 
+    if(inptype == "difference from average"){
+      #print(countydata[dex,inpval] - mean(countydata[dex,inpval]))
+      print(meanv)
+      val = (countydata[dex,inpval] - meanv)
+      print(head(val))
+      print(length(dex))
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval] - meanv),color = "grey", size = 0.1) 
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = val),color = "grey", size = 0.1) 
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,inpval]-meanv),color = "grey", size = 0.1) 
+    }
+    
+    if(inptype == "logged val"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = log(countydata[dex,inpval])),color = "grey", size = 0.1) 
+    }
+    mapbase + mapmid + mapend + mapfill + mapguide
+  })
+  
+  output$residPlot <- renderPlot({
+    inpval = which(names(cpop2) == input$data_type)
+    cpd = which(names(cpop2) == "cl_spread")
+    print(input$data_type)
+    inptype = input$transformation
+    region = input$state
+    dex = which(!is.na(countydata))
+    mapend = coord_map("bonne", parameters=45)
+    mapfill = scale_fill_distiller(palette = "RdBu", direction = 1) 
+    mapguide = guides(fill=guide_legend(title=input$data_type))
+    print("howdydoo")
+    mod = lm(cpop2[,cpd] ~ cpop2[,inpval])
+    print("howdydoo2")
+    cpop2$resid[which(rowSums( is.na(cpop2[,c(cpd, inpval)])) == 0)] = mod$residuals
+    print("howdydoo3")
+    View(cpop2)
+    cp = data.frame(cpop2$fips, cpop2$resid)
+    print("howdydoo4")
+    names(cp) = c("fips", "resid")
+    
+    print(length(mod$residuals))
+    print(nrow(countydata))
+    print(length(dex))
+    #print(names(full_county_data))
+    print(which(names(full_county_data) == "fips"))
+    print(which(names(cp) == "fips"))
+    countydata2 <- left_join(full_county_data, cp, c("fips" = "fips"))
+   # View(countydata2)
+    countydata = countydata2
+    inpval = which(names(countydata) == input$data_type)
+    
+   # gcounty_pop <- arrange(gcounty_pop, order)
+  #  gcounty_pop <- left_join(dct, cpop2)
+    #countydata = gcounty_pop
+   # countydata = merge(countydata, cp, all.x = TRUE)
+   # View(countydata2)
+    
+    #  ggplot(countydata) + geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval]),color = "grey", size = 0.1) + coord_map("bonne", parameters=45)+ scale_fill_distiller(palette = "Reds", direction = 1) + guides(fill=guide_legend(title=input$Year))
+    if(region != "nation"){
+      dex = which(countydata$region == region)
+      mapbase = ggplot(countydata[dex,])
+      print("howdy")
+    } else {
+      dex = c(1:nrow(countydata))
+      mapbase = ggplot(countydata)
+    }
+    mapbase = ggplot(countydata[dex,]) 
+    meanv = mean(na.omit(countydata[dex,inpval])) 
+    #mapbase + mapmid + mapend + mapfill + mapguide
+    if(inptype == "standard"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,ncol(countydata)]),color = "grey", size = 0.1) 
+      
+    } 
+    if(inptype == "difference from average"){
+      #print(countydata[dex,inpval] - mean(countydata[dex,inpval]))
+      print(meanv)
+      val = (countydata[dex,inpval] - meanv)
+      print(head(val))
+      print(length(dex))
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[,inpval] - meanv),color = "grey", size = 0.1) 
+      #mapmid = geom_polygon(aes(long, lat, group = group, fill = val),color = "grey", size = 0.1) 
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = countydata[dex,inpval]-meanv),color = "grey", size = 0.1) 
+    }
+    
+    if(inptype == "logged val"){
+      mapmid = geom_polygon(aes(long, lat, group = group, fill = log(countydata[dex,inpval])),color = "grey", size = 0.1) 
+    }
+    mapbase + mapmid + mapend + mapfill + mapguide
+  })
+  
+}
+
+
+shinyApp(ui = ui, server = server)

@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "shinyApp(\n  ui = fluidPage(\n    sliderInput(\"slider\", \"Slider\", 1, 100, 50),\n    downloadButton(\"report\", \"Generate report\")\n  ),\n  server = function(input, output) {\n    output$report <- downloadHandler(\n      # For PDF output, change this to \"report.pdf\"\n      filename = \"report.html\",\n      content = function(file) {\n        # Copy the report file to a temporary directory before processing it, in\n        # case we don't have write permissions to the current working dir (which\n        # can happen when deployed).\n        tempReport <- file.path(tempdir(), \"report.Rmd\")\n        file.copy(\"report.Rmd\", tempReport, overwrite = TRUE)\n        \n        # Set up parameters to pass to Rmd document\n        params <- list(n = input$slider)\n        \n        # Knit the document, passing in the `params` list, and eval it in a\n        # child of the global environment (this isolates the code in the document\n        # from the code in this app).\n        rmarkdown::render(tempReport, output_file = file,\n                          params = params,\n                          envir = new.env(parent = globalenv())\n        )\n      }\n    )\n  }\n)",
+    "created" : 1508897533578.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2142119704",
+    "id" : "B8901258",
+    "lastKnownWriteTime" : 1508897707,
+    "last_content_update" : 1508897707428,
+    "path" : "~/Documents/shiny1/shiny_html_test.R",
+    "project_path" : "shiny_html_test.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

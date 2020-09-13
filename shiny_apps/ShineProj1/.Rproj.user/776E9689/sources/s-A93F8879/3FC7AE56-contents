@@ -1,0 +1,137 @@
+library(twitteR)
+library(tidyr)
+library(ggplot2)
+library(ggmap)
+#library(GTrendsR)
+
+
+
+setup_twitter_oauth("e3jYwJZxRhpPhTIubnJyDPEhq", #consumer_key
+                    "CLJPdUgytagatmPz89N3RxiWXCT68G6UW4NlNlgtREPSvlEaFS", #consumer_secret
+                    "763105637140004865-ZjkWg8g2r80YLoI0tUEPmQPRcCCYAE4", #access_token
+                    "VQOX93Wm737uO6lrBSuhjS0bzHZKHmDKpeWQDSpDToWT7") #access_secret
+
+
+don = getUser(user = "realDonaldTrump")
+location(don)
+
+
+dhist = userTimeline(don, n = 300)
+dframe = twListToDF(dhist)
+View(dframe)
+
+
+aggregate_tframe_text = function(twitter_dataframe){
+  
+  string = ""
+  for (x in 1:nrow(twitter_dataframe)){
+    string = paste(string, twitter_dataframe$text[x], sep = " ")
+  }
+  
+  return(string)
+}
+
+twit_time = function(twitter_dataframe){
+  twitter_dataframe = separate(twitter_dataframe, col = created, into = c("date", "time"), sep = " ")
+  twitter_dataframe = separate(twitter_dataframe, col = date, into = c("year", "month", "day"), sep = "-")
+  twitter_dataframe = separate(twitter_dataframe, col = time, into = c("hour", "minute", "second"), sep = ":")
+  twitter_dataframe$year = as.numeric(twitter_dataframe$year)
+  twitter_dataframe$month = as.numeric(twitter_dataframe$month)
+  twitter_dataframe$hour = as.numeric(twitter_dataframe$hour)
+  twitter_dataframe$minute = as.numeric(twitter_dataframe$minute)
+  twitter_dataframe$second = as.numeric(twitter_dataframe$second)
+  
+  return(twitter_dataframe)
+  
+}
+
+
+add_day_count = function(twitter_dataframe){
+  
+  for (x in 1:nrow(twitter_dataframe)){
+    
+    twitter_dataframe$count[x] = 
+      length(which(twitter_dataframe$day[which(twitter_dataframe$month == twitter_dataframe$month[x])]
+                   == twitter_dataframe$day[x]))
+    #table(twitter_dataframe$day[which(twitter_dataframe$month == twitter_dataframe$month[x])])[[x]]
+    
+  }
+  return(twitter_dataframe)
+}
+
+mungeD = twit_time(dframe)
+
+cont = add_day_count(mungeD)
+
+dd = twit_time(dframe)
+library(stringr)
+d = aggregate_tframe_text(dd)
+
+ds = str_replace_all(d, pattern = "[[:punct:]]", "")
+ds = strsplit(ds, " ")
+
+
+
+
+
+#tweets = searchTwitter("hillary",  since = '2016-08-22', n = 100)
+#twees = twListToDF(tweets)
+#View(twees)
+
+
+
+location(getUser("ChuckGrassley"))
+grassley = geocode(location(getUser("ChuckGrassley")))
+
+
+
+
+add_locations = function(tdframe){  # adds location data when available for all users in a searchTwitter result
+  for (x in 1:nrow(tdframe)){ 
+    tdframe$lon[x] = suppressMessages(geocode(location(getUser(tdframe$screenName[x])))[[1]])
+    tdframe$lat[x] = suppressMessages(geocode(location(getUser(tdframe$screenName[x])))[[2]])
+  }  
+  return(tdframe)
+} 
+
+clean.text = function(x)
+{
+  # tolower
+  x = tolower(x)
+  # remove rt
+  x = gsub("rt", "", x)
+  # remove at
+  x = gsub("@\\w+", "", x)
+  # remove punctuation
+  x = gsub("[[:punct:]]", "", x)
+  # remove numbers
+  x = gsub("[[:digit:]]", "", x)
+  # remove links http
+  x = gsub("http\\w+", "", x)
+  # remove tabs
+  x = gsub("[ |\t]{2,}", "", x)
+  # remove blank spaces at the beginning
+  x = gsub("^ ", "", x)
+  # remove blank spaces at the end
+  x = gsub(" $", "", x)
+  return(x)
+}
+
+df = sapply(dhist, function(x) x$getText())
+df = sapply(df, function(row) iconv(row, "latin1", "ASCII", sub=""))
+dff = paste(clean.text(df), collapse = " ")
+dff = removeWords(dff, stopwords("english"))
+
+wrds = Corpus(VectorSource(dff)) #%>% tm_map(removePunctuation) %>% tm_map(removeNumbers)
+#wrds = Corpus(VectorSource(dframe$text)) %>% tm_map(removePunctuation) %>% tm_map(removeNumbers)
+#wrds = wrds[ grep("wrds", iconv(wrds, "latin1", "ASCII", sub="wrds"))]  
+  
+#wrds = removeWords(wrds, stopwords("english"))
+#wrds = wrds %>% tm_map(tolower)  %>%  tm_map(removeWords, stopwords("english")) %>%  tm_map(stripWhitespace) %>%  tm_map(PlainTextDocument)
+trms = as.matrix(TermDocumentMatrix(wrds))
+wordcloud(row.names(trms), trms[,1])
+
+
+
+
+

@@ -1,0 +1,36 @@
+library(dplyr)
+library(readr)
+library(stringr)
+library(tidyr)
+library(readxl)
+library(classInt)
+library(RColorBrewer)
+library(maptools)
+library(readr)
+
+#new_county_election_2016 <- read_excel("~/Downloads/new_county_election_2016.xlsx")
+#countydata <- read.csv("~/Documents/shiny1/countydata.csv")
+#
+#gc <- merge(countydata, new_county_election_2016, all.x = TRUE)
+#gc <- arrange(gc, order)
+#gc <- left_join(countydata, new_county_election_2016)
+
+cpop2 = cbind(new_county_election_2016$CountyCode, new_county_election_2016)
+for(n in c(6:12)){
+cpop2[,n] = as.numeric(cpop2[,n])
+}
+names(cpop2)[1] = "fips"
+
+gcounty_pop <- merge(gcounty, cpop2, all.x = TRUE)
+gcounty_pop <- arrange(gcounty_pop, order)
+gcounty_pop <- left_join(gcounty, cpop2)
+
+
+dct = countydata[,-1]
+
+gcounty_pop <- merge(dct, cpop2, all.x = TRUE)
+gcounty_pop <- arrange(gcounty_pop, order)
+gcounty_pop <- left_join(dct, cpop2)
+
+fullcdta = gcounty_pop
+#write.csv(fullcdta, "full_county_data.csv")

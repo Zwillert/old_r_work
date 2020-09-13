@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <Title>Service Professional Website</Title>
+    <link rel="stylesheet" href="site4.css">
+      
+      </head>
+      
+      <body>
+      <div class="master_div">
+        
+        <div class="topnav">
+          
+          
+          
+          <div class="nav_elem menu">Menu</div>
+            <a class="nav_elem" href="index.html">Home</a>
+              <a class="nav_elem" href="About.html">About</a>
+                <a class="nav_elem" href="Links.html">Links</a>
+                  <a class="nav_elem" href="Services.html">Services</a>
+                    <a class="nav_elem" href="Contact.html">Contact</a>
+                      </div>
+                      
+                      
+                      
+                      <div class="body">
+                        
+                        <h2 style="text-align: center;" id = "p1">Links</h2>
+                          <h4 style="text-align: center;" id = "p2">Links to some things I've worked on</h4>
+                          <div class="profpic"></div>
+                          <br>
+                          
+                          <h3>School Projects</h3>
+                          <a href="Testing_Theories_of_American_Politics.pdf">Final Economics "Capstone" paper</a>
+                          <p>This paper examined various theories on American politics and the relationships between political poliarization, income inequality, and broad political and economic institutions.</p>
+                          
+                          <a href="https://drive.google.com/file/d/16INBDzoCAmjDTrFhAaPCzAoTVOifVdX4/view">Final Mathematics "Capstone" presentation</a>
+                          <p>This project presented and examined various network and differential equation models of information and opinion dynamics in groups, and examined the mechanisms of these models under various social circumstances.</p>
+                          
+                          <a href="https://drive.google.com/file/d/1gFoybQWIja9cSOL7MhDy8x1gU-3-LXVJ/view">Poster as presented in Topological Data Analysis conference (June 2017). </a>
+                          
+                          <p>This project uses the topological data analysis tool persistent homology to analyze and describe the shape of the US senate, and to study how this shape has changed over time. This started as my final project for my topology class in the Spring (as an essay and presentation), and then I presented this poster at a conference over the Summer.</p>
+                          
+                          
+                          
+                          <h3>R Shiny Apps</h3>
+                          <p>I love the R programming language, and I've made a few shiny apps for practical use and for fun.</p>
+        
+        <a href="https://zwillert.shinyapps.io/map_app/">Census and Presidential Election Mapper</a>
+        <p>This application generates county level maps of the United States to explore various Presidential Election data as well as various socioeconomic data from the Census.</p>
+        <a href="https://zwillert.shinyapps.io/shineproj1/">Visualizing the Senate</a>
+        <p>This tool analyzes and visualizes roll call data from the United States Senate.</p>
+        <a href="https://zwillert.shinyapps.io/stock_app/">Basic Stock Grapher</a>
+        <p>This application can generate a variety of popular stock data graphs such as various measures of momentum, moving averages, etc. This will soon include an historical stock trading simulation application. </p>
+        <a href="https://zwillert.shinyapps.io/twitter_app/">Twitter Word Cloud</a>
+        <p>This tool generates a 'wordcloud' of the word usage of any twitter user. Just type in their handle and hit the button. </p>
+        
+        <h3>Mac Startups</h3>
+        <p>In the Spring of 2015 I and a fellow Macalester student determined ourselves to revive the Macalester student Summer startup incubator "Mac Startups". Before long we had agreed on a plan and a budget with the college president and began running the program. Here are some relevant links. </p>
+        
+        <a href="http://tech.mn/news/2015/07/15/mac startups 2015/">Tech.MN (Local tech/entrepreneurship website) article</a>
+        <p>Here is a brief article about the program from the local tech/entrepreneurship website "tech{dot}MN"</p>
+        
+        
+        <a href="http://www.ustream.tv/recorded/72936776">Mac Startups Demo Day Video</a>
+        <p>The program ended with a "Demo Day" where each team presented investment-pitch style presentations to the Twin Cities entrepreneurial and investment community. Much to our delight, our final "Demo Day" became an official part of the annual Twin Cities Startup Week. Here is the full video of the demo day. </p>
+        
+        <p>More stuff to come!</p>
+        
+    <br>
+    
+    </div>
+    </div>
+    </body>
+        <script src="jsSupport.js"></script>
+
+</html>

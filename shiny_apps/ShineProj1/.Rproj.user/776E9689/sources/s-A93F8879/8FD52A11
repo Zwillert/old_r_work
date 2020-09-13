@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513052974927.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8FD52A11",
+    "lastKnownWriteTime" : 4294967302,
+    "last_content_update" : 1513052974927,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "36005A04",
+        "caption" : "newdt",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=newdt&cache_key=36005A04",
+        "displayedObservations" : 3195,
+        "environment" : "",
+        "object" : "newdt",
+        "preview" : 0,
+        "totalObservations" : 3195,
+        "variables" : 89
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

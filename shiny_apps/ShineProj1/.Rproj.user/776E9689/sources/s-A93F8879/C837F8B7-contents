@@ -1,0 +1,312 @@
+
+library(geosphere)
+library(RgoogleMaps)
+#d <- read.csv("~/Downloads/d.csv")
+
+return_conflict_data = function(conflict_dyad_dset_id, war_data = d){
+  return(war_data[which(war_data$dyad_dset_id == conflict_dyad_dset_id),])
+}
+
+war_mapping_region = function(conflict_dyad_data){
+  l = min(conflict_dyad_data$longitude)
+  b = min(conflict_dyad_data$latitude)
+  r = max(conflict_dyad_data$longitude)
+  t = max(conflict_dyad_data$latitude)
+  bbox = c(l,r,t,b)
+  return(bbox)
+}
+
+
+rg = regularCoordinates(100)
+View(rg)
+rgd = rg[which(rg[,1] > -85 & rg[,1] < -65 & rg[,2] > -5 & 10>rg[,2]),]
+View(rgd)
+
+
+equal_region_pts = function(bbox, global_pts = rg){
+  pts = global_pts[which(global_pts[,1] > bbox[1] & global_pts[,1] < bbox[2] & global_pts[,2] < bbox[3] & global_pts[,2] > bbox[4]),]
+  return(pts)
+}
+
+#war_mapping_region = function(conflict_dyad_data){
+#  l = min(conflict_dyad_data$longitude)
+#  b = min(conflict_dyad_data$latitude)
+#  r = max(conflict_dyad_data$longitude)
+#  t = max(conflict_dyad_data$latitude)
+#  bbox = c(l,b,r,t)
+#  return(get_stamenmap(bbox, maptype = "watercolor", zoom = 3))
+#}
+
+#indo =return_conflict_data(conflict_dyad_dset_id = 347, war_data = d)
+#indo_m = war_mapping_region(indo)
+#
+#base = ggmap(indo_m, base_layer = ggplot(aes(x = longitude, y = latitude), data = indo))
+#base +stat_density2d(aes(x = longitude, y = latitude),bins = 5, geom = "polygon",data = indo) +scale_fill_gradient(low = "black", high = "red")
+#
+
+
+library(ggmap)
+#indo = get_m
+
+
+ret_specific_map = function(conf_data, country_name){
+  map = get_map(country_name, zoom = 6)
+  #map2 = ggmap(map, base_layer = ggplot(data = conf_data, aes(latitude, longitude)))
+  return(map)
+}
+
+#ret_specific_map2 = function(conf_data, map){
+#  #map = get_map(country_name, zoom = 6)
+#  map = ggmap(map, base_layer = ggplot(data = conf_data, aes(latitude, longitude)))
+#  return(map)
+#}
+
+#af = get_stamenmap("afghanistan",  zoom = 6)
+#af_d = return_conflict_data(327, d)
+##ggmap(af)
+#base_af = ggmap(af, base_layer = ggplot(aes(x = longitude, y = latitude),data = af_d), legend = "topleft")
+#
+##base_af = ggmap(af, base_layer = ggplot(aes(x = longitude, y = latitude),data = af_d))
+##base_af + stat_density2d(aes(x = longitude, y = latitude),data = af_d)
+#base_af + stat_density2d(aes(x = longitude, y = latitude, alpha = .1),data = af_d,geom = "polygon") +
+ # scale_fill_gradient(low = "red", high = "black")
+
+
+expand_death = function(conflict_dyad_data){
+  #conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(4:19,25:50,54)]
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(30,31, 48, ncol(conflict_dyad_data))]
+  nr = nrow(conflict_dyad_data)
+  #new = conflict_dyad_data[1,]
+  lats = c()
+  lons = c()
+  for(x in 1:nr){
+    d_val = conflict_dyad_data$best_est[x]
+    #new_r = conflict_dyad_data[x,]
+    #if (d_val > 0){
+   # for(v in 1:(d_val)){new = rbind(new, conflict_dyad_data[x,])}
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_val))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_val))
+    
+    print(x/nrow(conflict_dyad_data))
+   # } 
+  }
+  mat = cbind(lats, lons)
+  colnames(mat) = c("latitude", "longitude")
+  return(data.frame(mat))
+  
+}
+
+
+
+expand_all = function(conflict_dyad_data){
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48, 54)]
+  #nr = nrow(conflict_dyad_data)
+  dyads = unique(conflict_dyad_data$dyad_dset_id)
+  #lats = c()
+  #lons = c()
+  dyad_death = c()
+  d_time = c()
+  for(x in dyads){
+    #d_a= conflict_dyad_data$deaths_a[x]
+    #d_b= conflict_dyad_data$deaths_b[x]
+    #d_c = conflict_dyad_data$deaths_civilians[x]
+    dex = which(conflict_dyad_data$dyad_dset_id == x)
+    est = sum(conflict_dyad_data$best_est[dex])
+    time = max(conflict_dyad_data$time_count[dex]) - min(conflict_dyad_data$time_count[dex])
+    dyad_death = c(dyad_death, est)
+    d_time = c(d_time, time)
+    #lats = c(lats, rep(conflict_dyad_data$latitude[x], est))
+    #lons = c(lons, rep(conflict_dyad_data$longitude[x], est))
+    #side = c(side, rep(1, est))
+    
+    #lats = c(lats, rep(conflict_dyad_data$latitude[x], d_b))
+    #lons = c(lons, rep(conflict_dyad_data$longitude[x], d_b))
+    #side = c(side, rep(2, d_b))
+    #
+    #lats = c(lats, rep(conflict_dyad_data$latitude[x], d_c))
+    #lons = c(lons, rep(conflict_dyad_data$longitude[x], d_c))
+    #dyad = c(dyad, rep(conflict_dyad_data$dyad_dset_id, est))
+    
+    print(x/nrow(conflict_dyad_data))
+    # } 
+  }
+  mat = cbind(dyads, dyad_death, d_time)
+  colnames(mat) = c("dyad", "deaths", "days")
+  mat = data.frame(mat)
+  mat = mat[which(mat$days > 0),]
+  mat$rate = mat$deaths/mat$days
+  #mat[which(mat$side == 1),3] = sa
+  #mat[which(mat$side == 2),3] = sb
+  return(mat)
+  
+}
+
+
+expand_death_sides = function(conflict_dyad_data){
+  sa = conflict_dyad_data$side_a
+  sb = conflict_dyad_data$side_b
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(10,30,31, 44,45,46,48)]
+  nr = nrow(conflict_dyad_data)
+  lats = c()
+  lons = c()
+  side = c()
+  for(x in 1:nr){
+    d_a= conflict_dyad_data$deaths_a[x]
+    d_b= conflict_dyad_data$deaths_b[x]
+    d_c = conflict_dyad_data$deaths_civilians[x]
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], sum(d_a)))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], sum(d_a)))
+    side = c(side, rep(1, d_a))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], sum(d_b)))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_b))
+    side = c(side, rep(2, d_b))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_c))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_c))
+    side = c(side, rep(3, d_c))
+    
+    print(x/nrow(conflict_dyad_data))
+    # } 
+  }
+  mat = cbind(lats, lons, side)
+  colnames(mat) = c("latitude", "longitude", "side")
+  mat = data.frame(mat)
+  #mat[which(mat$side == 1),3] = sa
+  #mat[which(mat$side == 2),3] = sb
+  return(mat)
+  
+}
+
+
+colum = return_conflict_data(237)
+col_death = expand_death(colum)
+
+af = get_map("iraq",  zoom = 6)
+afx = expand_death_sides(return_conflict_data(448))
+base_af = ggmap(af, base_layer = ggplot(aes(x = longitude, y = latitude),data = return_conflict_data(448)))
+cmap2 = base_af
+slayer = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =..level..),
+bins = 60, geom = "polygon",
+data = afx)
+afx$side[which(afx$side == 3)] = "Civilians"
+afx$side[which(afx$side == 2)] = "ISIS"
+afx$side[which(afx$side == 1)] = "Iraq_Government"
+#cmap2 = 
+base_af + slayer + facet_wrap(~side) + scale_fill_gradient(low = "blue", high = "red")+ggtitle("Distribution of Fatalities in Iraq-Isis war")
+
+
+
+clayer = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =.8),
+                        bins = 40, geom = "polygon",
+                        data = afx)
+cmap2 + clayer
+
+
+clayer2 = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =.08),
+                        bins = 50, geom = "polygon",
+                        data = col_death)
+cmap2 + clayer2
+
+
+col_death2 = expand_death_sides(colum)
+cd2 = col_death2
+cd2$side[which(cd2$side == 3)] = "Civilians"
+cd2$side[which(cd2$side == 2)] = "Farc"
+cd2$side[which(cd2$side == 1)] = "Colombian_Government"
+clayer3 = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =..level..),
+                         bins = 30, geom = "polygon",
+                         data = cd2)
+cmap2 + clayer3  + facet_wrap(~side) + scale_fill_gradient(low = "blue", high = "red")
+cmap2 = ggmap(get_map("Colombia", zoom = 6), base_layer = ggplot(colum, aes(latitude, longitude)))
+
+expand_death_sides2 = function(conflict_dyad_data){
+  #sa = conflict_dyad_data$side_a
+  #sb = conflict_dyad_data$side_b
+  conflict_dyad_data = conflict_dyad_data[which(conflict_dyad_data$best_est > 0),c(30,31, 38,39,44,45,46,48)]
+  nr = nrow(conflict_dyad_data)
+  lats = c()
+  lons = c()
+  side = c()
+  time = c()
+  
+  if(max(conflict_dyad_data$Year_start) -min(conflict_dyad_data$Year_start) <5){
+  for(x in 1:nr){
+    d_a= conflict_dyad_data$deaths_a[x]
+    d_b= conflict_dyad_data$deaths_b[x]
+    d_c = conflict_dyad_data$deaths_civilians[x]
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_a))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_a))
+    side = c(side, rep(1, d_a))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_b))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_b))
+    side = c(side, rep(2, d_b))
+    
+    lats = c(lats, rep(conflict_dyad_data$latitude[x], d_c))
+    lons = c(lons, rep(conflict_dyad_data$longitude[x], d_c))
+    side = c(side, rep(3, d_c))
+    
+    time = c(time, rep(paste(conflict_dyad_data$Year_start[x],  
+                             conflict_dyad_data$Month_start[x],sep = "_"), d_a+d_b+d_c))  
+    print(x/nrow(conflict_dyad_data))
+    # } 
+  } 
+  } else 
+    for(x in 1:nr){
+      d_a= conflict_dyad_data$deaths_a[x]
+      d_b= conflict_dyad_data$deaths_b[x]
+      d_c = conflict_dyad_data$deaths_civilians[x]
+      lats = c(lats, rep(conflict_dyad_data$latitude[x], d_a))
+      lons = c(lons, rep(conflict_dyad_data$longitude[x], d_a))
+      side = c(side, rep(1, d_a))
+      
+      lats = c(lats, rep(conflict_dyad_data$latitude[x], d_b))
+      lons = c(lons, rep(conflict_dyad_data$longitude[x], d_b))
+      side = c(side, rep(2, d_b))
+      
+      lats = c(lats, rep(conflict_dyad_data$latitude[x], d_c))
+      lons = c(lons, rep(conflict_dyad_data$longitude[x], d_c))
+      side = c(side, rep(3, d_c))
+      
+      time = c(time, rep(conflict_dyad_data$Year_start[x], d_a+d_b+d_c))  
+      print(x/nrow(conflict_dyad_data))
+      # } 
+    } 
+ 
+  mat = cbind(lats, lons, side, time)
+  colnames(mat) = c("latitude", "longitude", "side", "time")
+  mat = data.frame(mat)
+  #mat[which(mat$side == 1),3] = sa
+  #mat[which(mat$side == 2),3] = sb
+  return(mat)
+  
+}
+
+col_death22 = expand_death_sides2(colum)
+cd2 = col_death22
+cd2$side[which(cd2$side == 3)] = "Civilians"
+cd2$side[which(cd2$side == 2)] = "Farc"
+cd2$side[which(cd2$side == 1)] = "Colombian_Government"
+clayer3 = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =..level..),
+                         bins = 30, geom = "polygon",
+                         data = cd2)
+#clayer3 = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =..level..),
+#                         bins = 30, geom = "polygon",
+ #                        data = cd2) 
+
+cmap2 + clayer3   + facet_wrap(~side) + scale_fill_gradient(low = "blue", high = "red")
+
+
+smal_d = expand_death_sides(soma)
+#indo = return_
+smal_d$side[which(smal_d$side == 3)] = "Civilians"
+smal_d$side[which(smal_d$side == 2)] = "Al-Shabaab"
+smal_d$side[which(smal_d$side == 1)] = "SomalianGovernment"
+soma = return_conflict_data(770)
+smal = ggmap(get_map("Somalia", zoom = 6, api_key = "AIzaSyAnSgBTPaZMSuVgakJepEkP5nB3Yz9bqLY"), base_layer = ggplot(data = soma, aes(latitude, longitude)))
+clayer4 = stat_density2d(aes(x = longitude, y = latitude, fill = ..level.., alpha =..level..),
+                         bins = 50, geom = "polygon",
+                         data = smal_d)
+smal + clayer4  + facet_wrap(~side) + scale_fill_gradient(low = "blue", high = "red") + geom_point(data = smal_d[which(smal_d$side == "Civilians"),], aes(longitude, latitude))
+  

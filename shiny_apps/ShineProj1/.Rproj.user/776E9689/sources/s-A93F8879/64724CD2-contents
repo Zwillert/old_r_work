@@ -1,0 +1,91 @@
+library(rgdal)
+library(raster)
+library(maps)
+library(ggmap)
+library(sp)
+library( CARBayes)
+library(shapefiles)
+library(maptools)
+library(geosphere)
+
+#d <- read.csv("~/Downloads/d.csv")
+#rgd = data.frame(read.csv(""))
+
+return_conflict_data = function(conflict_dyad_dset_id, war_data = data.frame(d)){
+  return(war_data[which(war_data$dyad_dset_id == conflict_dyad_dset_id),])
+}
+
+narrow_data = function(conflict_dyad_data, war_data = d){
+  lonm = mean(conflict_dyad_data$longitude)
+  lonsd = sd(conflict_dyad_data$longitude)
+  latm = mean(conflict_dyad_data$latitude)
+  latsd = sd(conflict_dyad_data$latitude)
+  l = lonm - 2 * lonsd
+  b = latm - 2 * latsd
+  r = lonm + 2 * lonsd
+  t = latm + 2 * latsd
+  bbox = c(l,r,t,b)
+  print(bbox)
+  return(select_pts(bbox = bbox, rg = conflict_dyad_data))
+}
+
+war_mapping_region = function(conflict_dyad_data){
+  l = min(conflict_dyad_data$longitude)
+  b = min(conflict_dyad_data$latitude)
+  r = max(conflict_dyad_data$longitude)
+  t = max(conflict_dyad_data$latitude)
+  bbox = c(l,r,t,b)
+  return(bbox)
+}
+
+rgs = regularCoordinates(100)
+rgd = data.frame(rgs)
+
+select_pts = function(bbox, rg = rgd){
+  if(ncol(rg) > 3){
+    m = rg
+    rg = cbind(rg$longitude, rg$latitude)
+   return(m[which(rg[,1] > bbox[1] & rg[,1] < bbox[2] & rg[,2] < bbox[3]& bbox[4]<rg[,2]),])
+  }
+  return(rg[which(rg[,1] > bbox[1] & rg[,1] < bbox[2] & rg[,2] < bbox[3]& bbox[4]<rg[,2]),])
+}
+
+c_set_to_pts = function(c_id){
+  cdta = return_conflict_data(c_id)
+  bb = war_mapping_region(cdta)
+  return(select_pts(bb))
+  
+}
+
+#rc = c_set_to_pts()
+#dm = distmat(nc,                          )
+
+c1 = return_conflict_data(237)
+plot(c1$longitude, c1$latitude)
+nc = narrow_data(c1)
+plot(nc$longitude, nc$latitude)
+
+pts = select_pts(war_mapping_region(nc))
+
+
+library(pracma)
+cm = matrix(cbind(nc$longitude, nc$latitude), nrow = 2)
+pt = as.matrix(pts)
+ddm = data.frame(dm)
+pts[which.min(ddm[1,]),]
+
+subset_data = function(dist_mat, pt_mat, conf_data){
+    #v = c()
+    pt_mat = cbind(pt_mat, rep(0, nrow(pt_mat)))
+  for(x in 1:nrow(conf_data)){
+    print(x/nrow(conf_data))
+    d = which.min(dist_mat[x,])
+    pt_mat[d,3] = pt_mat[d,3] + conf_data$best_est[x]
+  }
+  return(pt_mat)  
+}
+
+
+subt = subset_data(dist_mat = ddm, pt, nc)
+library(geosphere)
+p = makePoly(pts)

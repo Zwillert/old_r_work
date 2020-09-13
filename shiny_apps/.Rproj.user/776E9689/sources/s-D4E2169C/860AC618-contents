@@ -1,0 +1,196 @@
+library(quantmod)
+library(ggplot2)
+
+stock_name = "BAC"
+
+trade_data = list()
+trade_data$money = 100
+#trade_data$shares = c(0, 0, 0)
+#names(trade_data$shares) = c("AAPL", "GOOG", "AMZN")
+
+trade_data$shares = c(0)
+names(trade_data$shares) = stock_name
+trade_data$date = c()
+trade_data$value = c()
+
+
+stk = getSymbols(stock_name, from = Sys.Date() - 365, to = Sys.Date(), auto.assign = F)
+
+buy_condition = function(money, buy){
+  if(money > 0 & buy == T){
+    return(T)
+  } else {
+    return(F)
+  }
+}
+
+sell_condition = function(shares, sell){
+  if(shares > 0 & sell == T){
+    return(T)
+  } else {
+    return(F)
+  }
+}
+
+
+run_sim = function(trade_data_list, stock_data = stk){
+  initial_shares = as.numeric(trade_data_list$money/stock_data[1,1])
+  
+  for(x in 1:nrow(stock_data)){
+    trade_data_list$date = c(trade_data_list$date, index(stock_data)[x])
+    
+    if(buy_condition(trade_data_list$money, buy = T)){
+      trade_data_list$shares[[stock_name]] = as.numeric(trade_data_list$money/stock_data[x,1])
+      trade_data_list$money = 0
+    }
+    
+    if(sell_condition(trade_data_list$shares[[stock_name]], sell = T)){
+      trade_data_list$money = as.numeric(trade_data_list$shares[[stock_name]] * stock_data[x,4])
+      trade_data_list$shares[[stock_name]] = 0
+    }
+    
+    trade_data_list$value = c(trade_data_list$value, trade_data_list$money + trade_data_list$shares[[stock_name]]* stock_data[x,4])
+    
+  }
+  
+  full_data = data.frame(trade_data_list$date, trade_data_list$value, stock_data[,4], stock_data[,4] * initial_shares)
+  trade_data_list$full_data = full_data
+  return(trade_data_list)
+
+}
+
+trade_test = run_sim(trade_data)
+plt = ggplot(trade_test$full_data, aes(trade_data_list.date, trade_data_list.value)) + geom_path()
+#path2 =  geom_path(data = trade_test$full_data, aes(trade_data_list.date, BAC.Close.1), col = "red")
+
+'
+getSymbols("BAC")
+plot(BAC)
+plot(BAC$BAC.Open)
+lag.xts(BAC$BAC.Open, 1)
+BAC$l1 = lag.xts(BAC$BAC.Open, 1)
+View(BAC)
+BAC$CloseLag = lag.xts(BAC$BAC.Close, 1)
+BAC$CloseLagDiff = (BAC$BAC.Close - BAC$CloseLag)/BAC$CloseLag
+BAC$OpenLag = lag.xts(BAC$BAC.Open, 1)
+BAC$OpenLagDiff = (BAC$BAC.Open - BAC$OpenLag)/BAC$OpenLag
+plot(BAC$CloseLagDiff)
+plot(BAC$CloseLagDiff[c(2000:2778)])
+plot(BAC$CloseLagDiff[c(2500:2778)])
+moving_average = function(stock_data, col = 1, lag_len = 2, replacement = "moving_average"){
+stock_data$moving_average = stock_data[,col]
+for(x in (lag_len + 1):nrow(stock_data)){
+dex = c((x - lag_len):x)
+stock_data$moving_average[x] = mean(stock_data[dex, col])
+}
+colnames(stock_data)[which(colnames(stock_data) == "moving_average")] = replacement
+return(stock_data)
+}
+'
+
+'
+BAC$diffLagDiff = (BAC$CloseLagDiff - lag.xts(BAC$CloseLagDiff))
+BAC$lagLagDiff = lag.xts(BAC$CloseLagDiff)
+
+BAC$integral = 0
+for(x in 3:nrow(BAC)){
+  BAC$integral[x] = sum(BAC[c(3:x),11])
+}
+
+sumod = summary(lm((BAC$CloseLagDiff - lag.xts(BAC$CloseLagDiff)) ~ lag.xts(BAC$CloseLagDiff)))
+BAC$resid = sumod$residuals
+BAC$preds = sumod$coefficients[1] +  (lag.xts(BAC$CloseLagDiff) * sumod$coefficients[2])
+BAC$resid2 = BAC$diffLagDiff + BAC$preds
+BAC$CLDPred = BAC$preds + BAC$lagLagDiff
+BAC$PricePred = BAC$CLDPred * BAC$CloseLag + BAC$CloseLag
+
+
+BAC2 = moving_average(BAC, col = 9, lag_len = 10)
+plot(BAC2$moving_average[c(2500:2778)])
+BACD = data.frame(BAC2)
+BACD$Date = index(BAC)
+ggplot(BACD[c(2500:2778),], aes(Date, CloseLagDiff)) + geom_path()+ geom_path(data = BACD[c(2500:2778),], aes(Date, moving_average), col = "red")
+ggplot(BACD[c(2500:2778),], aes(Date, CloseLagDiff)) + geom_path()+ geom_path(data = BACD[c(2500:2778),], aes(Date, integral), col = "red")
+ggplot(BACD, aes(lagLagDiff, diffLagDiff, size = integral^2, alpha = .1, col = BAC.Volume^2)) + geom_point()
+ggplot(BACD[c(2600:2778),], aes(Date, BAC.Close)) + geom_path()+ geom_path(data = BACD[c(2600:2778),], aes(Date, PricePred), col = "red")
+
+ggplot(BACD[c(2600:2778),], aes(Date, (BAC.Close - PricePred)/BAC.Close)) + geom_path() + geom_path(data = BACD[c(2600:2778),], aes(Date, CloseLagDiff), col = "red")
+'
+
+ggplot(BACD, aes(Date, BAC.Open - BAC.Close)) + geom_path() + geom_path(data = BACD, aes(Date, BAC.Low - BAC.Open), col = "blue") + geom_path(data = BACD, aes(Date, BAC.High - BAC.Open), col = "red")
+summary(lm((BACD$BAC.Open - BACD$BAC.Close) ~ (BACD$BAC.Open - BACD$BAC.Low) + (BACD$BAC.Open - BACD$BAC.High)))
+#bac = BAC
+'
+bac$highLow = bac$BAC.High - bac$BAC.Low
+bac$opClo = bac$BAC.Open - bac$BAC.Close
+bac$opHigh = bac$BAC.Open - bac$BAC.High
+bac$opLow = bac$BAC.Low - bac$BAC.Open
+bac$highLowDiff  =  bac$opHigh - bac$opLow'
+
+symbol_var_gen = function(ticker){
+  bac = getSymbols(ticker, auto.assign = F)
+  colnames(bac) = c("BAC.Open", "BAC.High", "BAC.Low", "BAC.Close", "BAC.Volume", "BAC.Adjusted")
+  bac$l1 = lag.xts(bac$BAC.Open, 1)
+  bac$CloseLag = lag.xts(bac$BAC.Close, 1)
+  bac$CloseLagDiff = (bac$BAC.Close - bac$CloseLag)/bac$CloseLag
+  bac$OpenLag = lag.xts(bac$BAC.Open, 1)
+  bac$OpenLagDiff = (bac$BAC.Open - bac$OpenLag)/bac$OpenLag
+  bac$highLow = (bac$BAC.High - bac$BAC.Low)/bac$BAC.Open
+  bac$opClo = ( bac$BAC.Close - bac$BAC.Open)/bac$BAC.Open
+  bac$cloOp = (bac$BAC.Open - lag.xts(bac$BAC.Close))/lag.xts(bac$BAC.Close)
+  bac$opHigh = (bac$BAC.High - bac$BAC.Open)/bac$BAC.Open
+  bac$opLow = (  bac$BAC.Open - bac$BAC.Low)/bac$BAC.Open
+  bac$highLowDiff  =  (bac$opHigh - bac$opLow)
+  bac$opCloLag = lag.xts(bac$opClo)
+  bac$highLowDiffLag = lag.xts(bac$highLowDiff)
+  bac$opCloFut = lag.xts(bac$opClo, -1)
+
+  bac2 = data.frame(bac)
+  return(bac2)
+}
+bac = getSymbols("SQ", auto.assign = F)
+colnames(bac) = c("BAC.Open", "BAC.High", "BAC.Low", "BAC.Close", "BAC.Volume", "BAC.Adjusted")
+bac$l1 = lag.xts(bac$BAC.Open, 1)
+bac$CloseLag = lag.xts(bac$BAC.Close, 1)
+bac$CloseLagDiff = (bac$BAC.Close - bac$CloseLag)/bac$CloseLag
+bac$OpenLag = lag.xts(bac$BAC.Open, 1)
+bac$OpenLagDiff = (bac$BAC.Open - bac$OpenLag)/bac$OpenLag
+bac$highLow = (bac$BAC.High - bac$BAC.Low)/bac$BAC.Open
+bac$opClo = ( bac$BAC.Close - bac$BAC.Open)/bac$BAC.Open
+bac$cloOp = (bac$BAC.Open - lag.xts(bac$BAC.Close))/lag.xts(bac$BAC.Close)
+bac$opHigh = (bac$BAC.High - bac$BAC.Open)/bac$BAC.Open
+bac$opLow = (  bac$BAC.Open - bac$BAC.Low)/bac$BAC.Open
+bac$highLowDiff  =  (bac$opHigh - bac$opLow)
+bac$opCloLag = lag.xts(bac$opClo)
+bac$highLowDiffLag = lag.xts(bac$highLowDiff)
+bac$opCloFut = lag.xts(bac$opClo, -1)
+
+summary(lm(bac$opClo ~ bac$highLow))
+bac2 = data.frame(bac)
+
+
+ggplot(bac2, aes(opClo, highLow)) + geom_point()
+ggplot(bac, aes(opClo, highLow)) + geom_point()
+plot(bac2[,c(1, 8:22)])
+plot(bac2[which(bac2$highLowDiff^2  < .009),c(1, 8, 9, 11, 12, 18:22)])
+###
+plot(bac2[c(2500:2778),c(1, 8, 9, 11, 12, 18:27)])
+###
+
+ggplot(bac, aes(highLowDiff, opClo, col = CloseLagDiff)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(subset(bac, highLowDiff^2 < .009) , aes(highLowDiff, opClo, col = CloseLagDiff)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(bac, aes(highLowDiff)) + geom_histogram()
+ggplot(bac, aes(highLowDiff, opClo, col = CloseLagDiff)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(subset(bac, highLowDiff^2  < .009) , aes(highLowDiff, opClo, col = CloseLagDiff)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(bac, aes(highLowDiff)) + geom_histogram()
+ggplot(subset(bac, highLowDiff^2  < .009) , aes(highLowDiff, 1/opClo, col = opHigh)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(bac , aes(opLow, opHigh, col = opClo)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+
+ggplot(subset(bac, highLowDiff^2  < .009), aes(opLow, opHigh, col = opClo)) + geom_point()+ scale_color_distiller(palette = "Spectral")
+ggplot(bac2[c(2500:2778),], aes(CloseLagDiff, opClo)) + geom_point()
+
+mod1 = lm(bac2$diffLagDiff ~ bac2$lagLagDiff)
+bac2$fitted1 = c(NA, NA, mod1$fitted.values)
+mod2 = lm(bac2$CloseLagDiff ~ bac2$fitted1)
+plot(bac2[c(2500:2778) ,c(1, 8, 9, 11, 12, 18:29)])
+

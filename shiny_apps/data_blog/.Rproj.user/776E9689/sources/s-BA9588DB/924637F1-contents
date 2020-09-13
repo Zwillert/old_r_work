@@ -1,0 +1,17 @@
+library(jsonlite)
+library(Quandl)
+
+apiKey = "tdotNVUDf9_3zUtzFyP4"
+Quandl.api_key(apiKey)
+Quandl('CBOE/PUT', start_date='2017-12-22', end_date='2017-12-22')
+Res <- fromJSON('https://query2.finance.yahoo.com/v7/finance/options/AAPL?')
+Res2 <- fromJSON('https://query2.finance.yahoo.com/v7/finance/options/AAPL?&date=1471564799')
+View(Res$optionChain$result$options[[1]]$calls[[1]])
+View(Res2$optionChain$result$options[[1]]$calls[[1]])
+
+get_calls = function(ticker, start_date, end_date){
+  api_call_base = paste('https://query2.finance.yahoo.com/v7/finance/options/', ticker,'?&date=', sep = "" )
+  for(d in c(start_date:end_date)){
+    api_call = paste(api_call_base, d, sep = "")
+  }
+}

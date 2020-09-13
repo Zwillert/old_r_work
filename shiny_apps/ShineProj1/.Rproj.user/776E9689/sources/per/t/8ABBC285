@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513050441917.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3150454823",
+    "id" : "8ABBC285",
+    "lastKnownWriteTime" : 1509043630,
+    "last_content_update" : 1509043630,
+    "path" : "~/Documents/shiny1/prez_rez_data_gen.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "35,28",
+        "scrollLine" : "14"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

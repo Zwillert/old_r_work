@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1515737389524.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AF2A88EA",
+    "lastKnownWriteTime" : 1,
+    "last_content_update" : 1515737389524,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D25B4EA7",
+        "caption" : "full_county_data_names",
+        "contentUrl" : "grid_resource/gridviewer.html?env=_rs_no_env&obj=full_county_data_names&cache_key=D25B4EA7",
+        "displayedObservations" : 51,
+        "environment" : "_rs_no_env",
+        "object" : "full_county_data_names",
+        "preview" : 0,
+        "totalObservations" : 51,
+        "variables" : 2
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

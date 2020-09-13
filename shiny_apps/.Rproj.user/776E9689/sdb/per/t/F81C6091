@@ -1,0 +1,28 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1508877083323.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F81C6091",
+    "lastKnownWriteTime" : 4423505097799266409,
+    "last_content_update" : 1508877083323,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "3ps9856vml",
+        "caption" : "na.omit(countydata)",
+        "contentUrl" : "grid_resource/gridviewer.html?env=_rs_no_env&obj=&cache_key=3ps9856vml",
+        "displayedObservations" : 87445,
+        "environment" : "_rs_no_env",
+        "object" : "",
+        "totalObservations" : 87445,
+        "variables" : 69
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

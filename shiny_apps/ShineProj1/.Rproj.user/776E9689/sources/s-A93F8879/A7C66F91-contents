@@ -1,0 +1,74 @@
+library(png)
+library(raster)
+#d <- read.csv("~/Downloads/d.csv")
+setwd("~/Downloads")
+#img <- readPNG(system.file("img", "RenderData.png", package="png"))
+#gp = raster("RenderData.png")
+
+basic_add_pop = function(dta = d, sp_dta = tm){ 
+  dta$longitude = (dta$longitude )
+  dta$latitude = (dta$latitude )
+ # print(c(dta$longitude, dta$latitude))
+  dens = c() 
+  for(n in 1:nrow(dta)){
+    print(n/nrow(dta))
+   dex1 = sp_dta$x[which.min((sp_dta$x - dta$longitude[n])^2 )]
+   dex2 =sp_dta$y[which.min((sp_dta$y - dta$latitude[n])^2  )]
+   #which((sp_dta$y - dta$latitude[n])^2 <1 )
+          #sp_dta$y == dta$latitude[x]
+  # print(dex1)
+  # print(dex2)
+    nd = sp_dta$RenderData[which(sp_dta$x == dex1&sp_dta$y  == dex2)]
+    print(nd)
+    #print(sp_dta$RenderData[which(sp_dta$x == dta$longitude[x] & sp_dta$y == dta$latitude[x])]))
+    dens = c(dens,nd)
+    
+  }  
+  return(cbind(dta, dens))
+  
+} 
+
+ll_to_pop = function(ll, sp_dta = tm){
+  lon = (ll[1])
+  lat = round(ll[2])+ 0.05
+}
+ 
+
+rel_risk = function(dta){
+  if(ncol(dta) == 54){
+  dta = basic_add_pop(dta = dta)}
+  else{print("all good")}
+  dta$rel_riska = dta$deaths_a /dta$dens
+  dta$rel_riskb = dta$deaths_b /dta$dens
+  dta$rel_risk_tot = dta$best_est /dta$dens
+  return(dta)
+  
+}
+
+
+
+
+
+add_dens = function(dta, sp_dta){
+  dens = c()
+for(d in 1:nrow(dta)){
+  
+  print(d/nrow(dta))
+  
+  lon = dta$longitude[d]
+  lat = dta$latitude[d]
+  vc = c(lon, lat, 0)
+  dex = which.min(sp_dta[,c(1:3)] %*% vc )
+  print(dex)
+  #ld1 = which.min((sp_dta$x - lon)^2)
+  #ld2 = which.min((sp_dta$y - lat)^2)
+  #lon = sp_data$x[ld1]
+  #lat = sp_data$y[ld2]
+  dens = c(dens, sp_dta[t,3])
+  #dta$longitude[d] = lon 
+  #dta$latitude[d] = lat
+  #
+  #dens = c(dens, )
+}
+  return(dens)
+}

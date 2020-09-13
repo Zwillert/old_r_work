@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513009495125.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1047823338",
+    "id" : "BBE9E01",
+    "lastKnownWriteTime" : 1512152536,
+    "last_content_update" : 1512152536,
+    "path" : "~/Documents/shiny1/ShineProj1/legisshine_support.R",
+    "project_path" : "legisshine_support.R",
+    "properties" : {
+        "cursorPosition" : "4,18",
+        "scrollLine" : "28"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

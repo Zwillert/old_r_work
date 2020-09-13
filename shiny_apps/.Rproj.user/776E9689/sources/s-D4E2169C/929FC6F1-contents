@@ -1,0 +1,221 @@
+---
+title: "Home Work The 4th"
+author: "Zach Willert"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Part 1:
+
+### Number 1:
+
+#### A) 
+
+
+${X, Y} ~ Pois(\lambda)$
+Using the definition of a Poisson distribution, we can specify f(x), f(y)
+$f(x) = P(X = x) = \frac{0.5^{x} * e ^{-0.5}}{x!} for x \subseteq {0,1,2, ...}$
+$f(y) = P(Y = y) = \frac{10^{y} * e ^{-10}}{y!} for y \subseteq {0,1,2, ...}$
+
+
+#### B)  
+
+The properties of Poisson distributions include:
+
+$E(Pois(\lambda)) = Var(Pois(\lambda)) = \lambda$
+
+Thus:
+
+$E(X) = Var(X) = 0.5$
+$E(Y) = Var(Y) = 10$
+
+The rate parameter $\lambda$ is very influential in this function: A change to this parameter directly impacts the average and variability of the measurements.    
+
+$E(Pois(\lambda)) = Var(Pois(\lambda)) = \lambda$ !!!
+
+
+#### C)
+
+$$P(X = 0) = \frac{0.5^{x} * e ^{-0.5}}{x!} $$
+$$ 
+         = \frac{0.5^{0} * e ^{-0.5}}{0!} $$ 
+         $$
+         = \frac{1 * 0.6065306597}{1} $$ 
+         $$
+         = 0.6065306597
+       
+$$   
+
+
+$$
+P(Y = 0) = \frac{1^{x} * e ^{10}}{y!}$$ $$
+         = \frac{10^{0} * e ^{10}}{0!}$$ $$
+         = \frac{1 *  4.539992976e-05}{1}$$ 
+         $$
+         =  4.539992976e-05$$ 
+       
+
+
+
+### Number 2:
+
+X = minutes spend in a line at McDonalds  ~Exp(2)
+Y = minutes spent on hold at AppleCare  ~Exp(1)
+Z = minutes between your friend’s social media posts  ~Exp(1/2)
+
+#### A) 
+```{r}
+curve(dexp(x, 2), 0, 5, xlab="value", ylab="density", main="Exponential Densities")
+curve(dexp(x, 1), 0, 5, add=T, col=2)
+curve(dexp(x, 1/2), 0, 5, add=T, col=3, lty=2)
+```
+
+#### B)  
+The shape of the exponential curve is a constantly decreasing curve f' < 0 with a positive second derivative f'' > 0 (meaning that the curve levels out). As $\lambda$ increases, the curve steepens significantly. This is to say that as $\lambda$ increases, the function is more heavily weighted at the front, and there is a greater probability of the event described by the function to occur sooner. 
+
+
+#### C) 
+$E(Exp(\lambda)) = \frac{1}{\lambda}$
+$Var(Exp(\lambda)) = \frac{1}{\lambda^2}$
+
+Thus:
+
+$E(X) = 1/2, Var(X) = 1/4$
+$E(Y) = 1, Var(Y) = 1$
+$E(Z) = 2, Var(Z) = 4$
+
+#### D) 
+
+*The greater the rate at which an event occurs, the SHORTER the typical waiting time for that event.
+*The greater the rate at which an event occurs, the LESSER the variability in waiting times for that event.
+
+
+### Number 3) 
+
+X~Gamma(1,1)
+Y~Gamma(2,2)
+Z~Gamma(9,2)
+
+
+#### A)  
+```{r}
+curve(dgamma(x, 1, 1), from=0, to=8, xlab="value", ylab="density", main="Gamma Densities", xlim=c(0,8))
+curve(dgamma(x, 2, 2), from=0, to=8, add=T, col=2)
+curve(dgamma(x, 9, 2), from=0, to=8, add=T, col=3, lty=2)
+```
+
+
+#### B)  
+
+The gamma distribution can take an exponential shape, where the derivative is always negative, or it can take more of a bell-like curve, where the derivative is positive, then negative. 
+
+
+
+
+#### C) 
+$E(Gamma(s,r)) = \frac{s}{r}$
+$Var(Gamma(s,r)) = \frac{s}{r^2}$
+
+Thus:
+
+$E(X) = 1, Var(X) = 1$
+$E(Y) = 1, Var(Y) = 1/2$
+$E(Z) = 4.5, Var(Z) = 2.25$
+
+
+#### D)
+
+An exponential distribution Exp($\lambda$) is equivalent to the Gamma(s,r) when s = 1, and r = $\lambda$. The Gamma is essentially an exponential modified to model multiple occurances, while the exponential is equivalent to a Gamma estimating an event occuring 1 time. 
+
+
+## Part 2: The FLU
+
+X = number of people that die from the flu per month.
+$\lambda$ = monthly death rate
+$X|\lambda~Pois(\lambda)$
+
+### Number 4:
+One epidemiologist thinks:
+$\lambda~Gamma(500,10)$
+
+#### A)
+The expert's PDF is:
+
+$f(\lambda) = c(500, 10) * x ^ {9} e ^{-500 * x}$ for $x \subseteq [0,\infty)$
+$f(\lambda) = c(500, 10) * x ^ {9} e ^{-500 * x}$ for $x \subseteq [0,\infty)$
+
+#### B)  
+```{r}
+curve(dgamma(x, 500, 10), 30, 70)
+```
+
+
+ #### C)
+ 
+ $$E(\lambda) = 500/10 = 50$$
+ $$Var(\lambda) = 500/100 = 5$$
+
+
+### Number 5:
+
+#### A)
+
+$$P(x=35|\lambda) = \frac{\lambda^35 * e ^ {-\lambda}}{35!}$$
+
+
+
+#### B)  
+
+Posterior:
+
+$$  f(\lambda|x=35) = \frac{P(x=35|\lambda) * P(\lambda)}{P(x = 35)}$$
+$$  f(\lambda|x=35) ~ P(x=35|\lambda) * P(\lambda)$$
+$$  f(\lambda|x=35) ~ \frac{\lambda^35 * e ^ {-\lambda}}{35!} * c(500, 10) * x ^ {9} e ^{-500 * x}$$
+$$  f(\lambda|x=35) ~ \frac{\lambda^35 * e ^ {-\lambda}}{35!} *  2.942919e+21 *  7.881564e+13 e ^{-500 * x}$$
+
+#### C)
+
+Because this is a rate with respect to time, this is a Poisson Distribution. 
+
+The expert's posterior is defined as:
+$$  f(\lambda|x=35) = \frac{P(x=35|\lambda) * P(\lambda)}{P(x = 35)}$$
+$$  P(\lambda|x=35) = \frac{\frac{lambda^35 * e ^ {-\lambda}}{35!} * P(\lambda)}{P(x = 35)}$$
+
+#### D)
+
+#### E)
+
+```{r}
+curve(dgamma(x, 500, 10), from=30, to=70)   #the prior
+#curve(dgamma(x, YOUR POSTERIOR s, YOUR POSTERIOR r), from=30, to=70, add=T, col=2)
+```
+
+
+
+
+### Number 6:
+
+
+
+### Number 7:
+
+
+#### A)  
+If E($\lambda$) = s/r = 50, and Var($\lambda$) = s/(r^2) = 500.
+
+Thus 
+*500 * r^2 = 50 * r
+*r = 1/10, s = 5
+*The correct model is Gamma(5, .1)
+
+
+#### B) 
+
+```{r}
+curve(dgamma(x, 5, .1), from=0, to=150)
+```
+

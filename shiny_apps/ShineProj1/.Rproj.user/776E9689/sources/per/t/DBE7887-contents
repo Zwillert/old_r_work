@@ -1,0 +1,454 @@
+pt = persistence()
+#pts = sort_pers_diag(pt)
+#ggplot(data.frame(pts[[1]]), aes( pep, eps_vec)) + geom_point() + geom_line() + coord_flip()
+#ggplot(data.frame(pts), aes( pep, eps_vec, col = pid_pct)) + geom_point() + geom_line() + coord_flip()
+setwd("~/Google Drive/Mac/4th Year/Spring/Topology")
+pl1 = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t132[[2]], aes( comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year)
+pl2 = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t132[[2]], aes( 99 * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year)
+
+
+
+sort_pers = function(pers_diag){
+  pers_diag = data.frame(pers_diag[[1]][[1]])
+  pd = c()
+  peeps = c(min(pers_diag[,1]):max(pers_diag[,1]))
+  pep = c()
+  isolated_people = c()
+  ncomp = c()
+  old_dex = which(pers_diag$pid_pct == 1)
+  for(x in min(pers_diag[,1]):max(pers_diag[,1])){
+    new_dex = which(pers_diag[,1] == x)
+    new_dex_2 = which(pers_diag[,2] == x)
+  # if(length(new_dex_2) != 0){
+  #   ncomp = c(ncomp, x)
+  #   isolated_people = c(isolated_people, sum(pers_diag$com_len_vec[unique(intersect(new_dex_2, old_dex))])/x)
+  #   
+  # }
+    #$com_len_vec[intersect(new_dex, old_dex)]
+    pd = c(pd,new_dex) 
+    pep = c(pep, rep(min(pers_diag[new_dex,2]), length(new_dex)))
+  }
+  persist_diag = data.frame(cbind(pers_diag[pd,], pep))
+  #party_info = data.frame(cbind(isolated_people, ncomp))
+  #return(list(persist_diag, party_info))
+  return(data.frame(persist_diag))
+}
+
+
+year_merge = function(y_list){
+  pers = persistence()
+  isolation_mat = pers[[2]][[1]]
+  pf = sort_pers(pers)
+  pf = data.frame(cbind(pf, rep(113, nrow(pf))))
+  iso = data.frame(cbind(isolation_mat, rep(113, nrow(isolation_mat))))
+
+  for(y in y_list){
+    pers = persistence(yr = y)
+    isolation_mat = pers[[2]][[1]]
+    pers = sort_pers(pers)
+    pers = data.frame(cbind(pers, rep(y, nrow(pers))))
+    isolation_mat = data.frame(cbind(isolation_mat, rep(y, nrow(isolation_mat)))) 
+#isolation_mat = data.frame(cbind(isolation_mat,y ))
+    print(dim(pers))
+    print(dim(pf))
+    #pf = rbind(pf, pers)
+    pf = rbind(as.matrix(pf), as.matrix(pers))
+    iso = rbind(as.matrix(iso), as.matrix(isolation_mat))
+    print(y)
+  }
+  colnames(pf)[ncol(pf)] = "year"
+  colnames(iso)[ncol(iso)] = "year"
+  year_merge_list = list(data.frame(pf), data.frame(iso))
+  names(year_merge_list) = c()
+  return(year_merge_list)
+}
+
+
+pf = pts[[1]]
+pf$des_n = max(pf$ncom_vec) - pf$ncom_vec + 1
+ggplot(data.frame(pf), aes( pep, des_n)) + geom_point() + coord_flip()
+ggplot(data.frame(pf), aes( pep, eps_vec)) + geom_point() + coord_flip()
+t132 = year_merge(c(102, 80, 100))
+t13 = year_merge(seq(112, 80, -2))
+t13[[2]]$eps_diff = c(t13[[2]]$rat_eps[-1], 0)- t13[[2]]$rat_eps
+t13[[2]]$eps_diff = t13[[2]]$eps_diff * (t13[[2]]$eps_diff >=0)
+t13[[2]]$eps_diff[which(t13[[2]]$rat_eps == 0)] = 0
+pf = t13[[1]]
+t2 = t13[[2]]
+pf$year = pf$year*2 + 1789
+t2$year = t2$year*2 + 1789
+t2$comp_rats = t2$num_connected_components
+ggplot(t2, aes(weighted_comp_rats, eps_diff, col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+ggplot(t2, aes(weighted_comp_rats, log(eps_diff), col = num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Percentage of Senators in Homogenous connected Component") + ggtitle("Partisan-Epsilon Sensativity")
+ggplot(t2, aes(weighted_comp_rats/(comp_rats), log(eps_diff), col = num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Pct of Senators in Partisan Component Per connected Component") + ggtitle("Scaled Partisan-Epsilon Sensativity")
+ggplot(t2, aes(exp(weighted_comp_rats), log(eps_diff), col = num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+
+colnames(t2)[1] = "num_connected_components"
+
+ggplot(t2, aes(weighted_comp_rats, eps_diff, col =num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+ggplot(t2, aes(weighted_comp_rats, log(eps_diff), col =num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Percentage of Senators in Homogenous connected Component") + ggtitle("Partisan-Epsilon Sensativity")
+ggplot(t2, aes(weighted_comp_rats/(num_connected_components), log(eps_diff), col =num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Pct of Senators in Partisan Component Per connected Component") + ggtitle("Scaled Partisan-Epsilon Sensativity")
+ggplot(t2, aes(exp(weighted_comp_rats), log(eps_diff), col =num_connected_components)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+
+ggplot(t2, aes(weighted_comp_rats, eps_diff, col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+ggplot(t2, aes(weighted_comp_rats, log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Percentage of Senators in Homogenous connected Component") + ggtitle("Partisan-Epsilon Sensativity")
+ggplot(t2, aes(weighted_comp_rats/(comp_rats), log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Pct of Senators in Partisan Component Per connected Component") + ggtitle("Scaled Partisan-Epsilon Sensativity")
+ggplot(t2, aes(exp(weighted_comp_rats), log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+pl2 = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Number of Isolated Senators") + ggtitle("Persistent Homology of the Senate: Time Series")
+pl2 = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistent Homology of the Senate: Time Series")
+pl2 = ggplot(pf[which(pf$pid_pct < 1) & which(pf$eps_vec > min(pf$eps_vec)) ,], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistent Homology of the Senate: Time Series")
+pl2
+pf = pf[which( pf$eps_vec > 0),]
+pf$eps_vec2 =   pf$eps_vec2
+pl = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, (eps_vec - min(eps_vec))/max(eps_vec)))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Number of Isolated Senators") + ggtitle("Persistent Homology of the Senate: Time Series")
+plt = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, (eps_vec - min(eps_vec))/(max(eps_vec)-min(eps_vec))))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, (rat_eps - min(rat_eps))/(max(rat_eps) - min(rat_eps))), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, (eps_vec - min(eps_vec))/(max(eps_vec)-min(eps_vec)), alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep,(eps_vec - min(eps_vec))/(max(eps_vec)-min(eps_vec)), alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Number of Isolated Senators") + ggtitle("Persistent Homology of the Senate: Time Series")
+
+pl#pl2 = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t132[[2]], aes( 99 * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year)
+
+
+t14 = year_merge(seq(101, 80, -1))
+pf = t132[[1]]
+t132[[2]]$eps_diff = c(t132[[2]]$rat_eps[-1], 0)- t132[[2]]$rat_eps
+#pf$eps_vec = pf$eps_vec2
+pl1 = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_point(data = t132[[2]], aes(rat_eps, comp_rats))+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year)
+pl2 = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_point(data = t132[[2]], aes(rat_eps, comp_rats))+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~year)
+pl1 + geom_point(data = t132[[2]], aes(rat_eps, comp_rats))
+dex_zer = function(dex_vec, adj, n = 1){
+  v = c()
+  for(d in dex_vec){v =  c(v,which(adj[d,] == 1))}
+  return(v)
+}
+
+last_comps = function( yr = 0, c = "sen",  remove_slackers = T, slack_ratio = 2, n = 2){
+  
+  ydata = parse_year(y = yr, chamber = c)
+  jvotes = just_votes(ydata)
+  ydata = cbind(ydata$legis.data[-1,], c(1:nrow(ydata$legis.data[-1,])))
+  comp_rats = c()
+  weighted_comp_rats = c()
+  
+  slackers = which(rowSums(jvotes == -1) > (ncol(jvotes)/slack_ratio))
+  if(remove_slackers == T){
+    jvotes = jvotes[-slackers,]
+    ydata = ydata[-slackers,]
+  }
+  print(nrow(ydata))
+  print(nrow(jvotes))
+  ex = as.matrix(expand_votes_v(jvotes))
+  distm = distmat(ex, ex)
+  
+  epmax = max(distm)
+  epmin = min(distm)
+  epsilon = sum(epmax, epmin)/2
+  
+  adj = find_adjacencies(distm, epsilon)
+  
+  while(n_comps(adj) != n){
+    if(n_comps(adj) < n){
+      epmax = epsilon
+      epsilon = sum(epmax, epmin)/2
+    } 
+    if(n_comps(adj) > n){
+      epmin = epsilon
+      epsilon = sum(epmax, epmin)/2
+    } 
+    adj = find_adjacencies(distm, epsilon)
+  }
+  
+  colnames(ydata)[ncol(ydata)] = "lnum"
+  
+  comp_all = c()
+  comp_acc = 0
+  l = list()
+  mat = adj * 0
+  for(x in 1:nrow(adj)){
+    if (x %in% comp_all){next}
+    comp = which(adj[x,] == 1)
+    while (length(setdiff(dex_zer(comp, adj), comp)) !=0){
+      comp = sort(union(comp, dex_zer(comp, adj)))  }
+    comp_acc = comp_acc + 1
+    ndem = length(which(ydata$party[comp] == "D"))
+    nrep = length(which(ydata$party[comp] == "R"))
+    nother = length(comp) - (ndem) - (nrep)
+    p_ratio = ndem/(ndem+nrep)
+    comp_rats = c(comp_rats, p_ratio)
+    weighted_comp_rats = c(weighted_comp_rats, (length(comp)/nrow(jvotes)))
+    l2 = list( p_ratio, ndem, nrep, nother)
+    names(l2) = c("dem_to_rep_ratio", "num_dem", "num_rep", "num_other")
+    l2 = list(comp, l2)
+    names(l2) = c("comp_vals", "composition")
+    l = append(l, list(l2))
+    names(l)[comp_acc] = paste("comp", comp_acc, sep = "_")
+    comp_all = c(comp_all, comp, 0)
+    mat[comp, comp] = 1
+  }
+
+  num_comps = length(l) 
+  pct_hom = sum(weighted_comp_rats[which(comp_rats != 0 & comp_rats != 1)])
+  l = list(num_comps, pct_hom , comp_rats, weighted_comp_rats,  epsilon, mat, ydata, l) 
+  names(l) = c("Number_O_components", "pct_connected" ,"party_ratios" ,"pop_representation" ,"epsilon", "full_adjacency_matrix", "legis_data",  "components")
+  return(l)
+} 
+
+
+n_comps = function(adj){ 
+  
+  comp_all = c()
+  comp_acc = 0
+
+  for(x in 1:nrow(adj)){
+    if (x %in% comp_all){next}
+    comp = which(adj[x,] == 1)
+    while (length(setdiff(dex_zer(comp, adj), comp)) !=0){
+      comp = sort(union(comp, dex_zer(comp, adj)))  }
+    comp_acc = comp_acc + 1
+    comp_all = c(comp_all, comp)
+  }
+  return(comp_acc)
+} 
+
+
+sort_pers_diag = function(pers_diag){
+  pers_diag = data.frame(pers_diag[[1]])
+  pd = c()
+  peeps = c(min(pers_diag[,1]):max(pers_diag[,1]))
+  pep = c()
+  isolated_people = c()
+  ncomp = c()
+  old_dex = which(pers_diag$pid_pct == 1)
+  for(x in min(pers_diag[,1]):max(pers_diag[,1])){
+    new_dex = which(pers_diag[,1] == x)
+    new_dex_2 = which(pers_diag[,2] == x)
+    if(length(new_dex_2) != 0){
+    ncomp = c(ncomp, x)
+    isolated_people = c(isolated_people, sum(pers_diag$com_len_vec[unique(intersect(new_dex_2, old_dex))])/x)
+      
+    }
+    #$com_len_vec[intersect(new_dex, old_dex)]
+    pd = c(pd,new_dex) 
+    pep = c(pep, rep(min(pers_diag[new_dex,2]), length(new_dex)))
+  }
+  persist_diag = data.frame(cbind(pers_diag[pd,], pep))
+  party_info = data.frame(cbind(isolated_people, ncomp))
+  return(list(persist_diag, party_info))
+}
+
+
+persistence = function( yr = 113, c = "sen",  remove_slackers = T, slack_ratio = 2, n = 2){
+  com_vec = c()
+  ncom_vec = c()
+  com_len_vec = c()
+  eps_vec = c()
+  eps_vec2 = c()
+  pid = c()
+  pid_n = c()
+  
+  if(1 == 1){
+  ydata = parse_year(y = yr, chamber = c)
+  jvotes = just_votes(ydata)
+  ydata = cbind(ydata$legis.data[-1,], c(1:nrow(ydata$legis.data[-1,])))
+  comp_rats = c()
+  weighted_comp_rats = c()
+  rat_eps = c()
+  slackers = which(rowSums(jvotes == -1) > (ncol(jvotes)/slack_ratio))
+  if(remove_slackers == T){
+    jvotes = jvotes[-slackers,]
+    ydata = ydata[-slackers,]
+  }
+  ex = as.matrix(expand_votes_v(jvotes))
+  distm = distmat(ex, ex)
+  epmax = max(distm)
+  epmin = min(distm)
+  epsilon = sum(epmax, epmin)/2
+  }
+  adj = find_adjacencies(distm, epsilon)
+  d2 = distm
+  ncom = nrow(distm)
+  pid_sum = 1
+  while(ncom != 1){
+    comp_rats = c(comp_rats, ncom)
+    weighted_comp_rats = c(weighted_comp_rats, pid_sum)
+    epsilon = min(d2)
+    rat_eps = c(rat_eps, epsilon)
+   # print(epsilon)
+    adj = find_adjacencies(distm, epsilon)
+    comps = n_comps_int(adj)
+    ncom = comps$Number_O_components
+    pid_sum = 0
+    for(x in 1:ncom){
+      which_comp = comps[[2]][[x]]
+      com_vec = c(com_vec, which_comp[1])
+      ncom_vec = c(ncom_vec, ncom)
+      com_len_vec = c(com_len_vec, length(which_comp))
+      eps_vec = c(eps_vec, epsilon)
+      pid = c(pid, ydata$partyCode[which_comp[1]])
+     #print(length(which_comp))
+     #print(length(which(ydata$partyCode[which_comp] ==  ydata$partyCode[which_comp[1]])))
+      pid_n = c(pid_n, length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) )#/ length(which_comp))
+      #pid_sum = pid_sum + length(which_comp) * (length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) == length(which_comp))
+      pid_sum = (pid_sum + (length(which_comp)/ncol(distm)) * (length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) == length(which_comp)))
+    }
+    d2[which(d2 <= epsilon)] = max(d2)
+  }
+  eps_vec2 = eps_vec / mean(eps_vec)
+      pid_pct = pid_n/com_len_vec
+  return(list(list(data.frame(cbind(com_vec, ncom_vec, com_len_vec, eps_vec,eps_vec2, pid, pid_n, pid_pct))), list(data.frame(cbind(comp_rats, weighted_comp_rats, rat_eps)))))
+  
+}
+
+
+n_comps_int = function(adj){ 
+  
+  comp_all = c()
+  comp_acc = 0
+  l = list()
+  
+  for(x in 1:nrow(adj)){
+    if (x %in% comp_all){next}
+    comp = which(adj[x,] == 1)
+    while (length(setdiff(dex_zer(comp, adj), comp)) !=0){
+      comp = sort(union(comp, dex_zer(comp, adj)))  }
+    comp_acc = comp_acc + 1
+    l = append(l, list(comp))
+    names(l)[comp_acc] = paste("comp", comp_acc, sep = "_")
+    comp_all = c(comp_all, comp, 0)
+    
+  }
+  num_comps = length(l)
+  l = list(num_comps,  l )
+  names(l) = c("Number_O_components",  "components")
+  return(l)
+} 
+
+
+
+
+
+persistence2 = function( yr = 113, c = "sen",  remove_slackers = T, slack_ratio = 2, n = 2, remove_indeps = T){
+  com_vec = c()
+  ncom_vec = c()
+  com_len_vec = c()
+  eps_vec = c()
+  eps_vec2 = c()
+  pid = c()
+  pid_n = c()
+  
+  if(1 == 1){
+    ydata = parse_year(y = yr, chamber = c)
+    jvotes = just_votes(ydata)
+    ydata = cbind(ydata$legis.data[-1,], c(1:nrow(ydata$legis.data[-1,])))
+    comp_rats = c()
+    weighted_comp_rats = c()
+    rat_eps = c()
+    slackers = which(rowSums(jvotes == -1) > (ncol(jvotes)/slack_ratio))
+    if(remove_slackers == T){
+      jvotes = jvotes[-slackers,]
+      ydata = ydata[-slackers,]
+    }
+    if(remove_indeps == T){
+      dex = which(ydata$partyCode%%100 != 0 )
+     # jvotes = jvotes[-dex,]
+     ydata$partyCode[dex] = 100
+    }
+    ex = as.matrix(expand_votes_v(jvotes))
+    distm = distmat(ex, ex)
+    epmax = max(distm)
+    epmin = min(distm)
+    epsilon = sum(epmax, epmin)/2
+  }
+  adj = find_adjacencies(distm, epsilon)
+  d2 = distm
+  ncom = nrow(distm)
+  pid_sum = 1
+  while(ncom != 1){
+    comp_rats = c(comp_rats, ncom)
+    weighted_comp_rats = c(weighted_comp_rats, pid_sum)
+    epsilon = min(d2)
+    rat_eps = c(rat_eps, epsilon)
+    # print(epsilon)
+    adj = find_adjacencies(distm, epsilon)
+    comps = n_comps_int(adj)
+    ncom = comps$Number_O_components
+    pid_sum = 0
+    for(x in 1:ncom){
+      which_comp = comps[[2]][[x]]
+      com_vec = c(com_vec, which_comp[1])
+      ncom_vec = c(ncom_vec, ncom)
+      com_len_vec = c(com_len_vec, length(which_comp))
+      eps_vec = c(eps_vec, epsilon)
+      pid = c(pid, ydata$partyCode[which_comp[1]])
+      #print(length(which_comp))
+      #print(length(which(ydata$partyCode[which_comp] ==  ydata$partyCode[which_comp[1]])))
+      pid_n = c(pid_n, length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) )#/ length(which_comp))
+      #pid_sum = pid_sum + length(which_comp) * (length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) == length(which_comp))
+      pid_sum = (pid_sum + (length(which_comp)/ncol(distm)) * (length(which(ydata$partyCode[which_comp] == ydata$partyCode[which_comp[1]])) == length(which_comp)))
+    }
+    d2[which(d2 <= epsilon)] = max(d2)
+  }
+  eps_vec2 = eps_vec / mean(eps_vec)
+  pid_pct = pid_n/com_len_vec
+  return(list(list(data.frame(cbind(com_vec, ncom_vec, com_len_vec, eps_vec,eps_vec2, pid, pid_n, pid_pct))), list(data.frame(cbind(comp_rats, weighted_comp_rats, rat_eps)))))
+  
+}
+
+
+year_merge2 = function(y_list){
+  pers = persistence2()
+  isolation_mat = pers[[2]][[1]]
+  pf = sort_pers(pers)
+  pf = data.frame(cbind(pf, rep(113, nrow(pf))))
+  iso = data.frame(cbind(isolation_mat, rep(113, nrow(isolation_mat))))
+  
+  for(y in y_list){
+    pers = persistence2(yr = y)
+    isolation_mat = pers[[2]][[1]]
+    pers = sort_pers(pers)
+    pers = data.frame(cbind(pers, rep(y, nrow(pers))))
+    isolation_mat = data.frame(cbind(isolation_mat, rep(y, nrow(isolation_mat)))) 
+    #isolation_mat = data.frame(cbind(isolation_mat,y ))
+    print(dim(pers))
+    print(dim(pf))
+    #pf = rbind(pf, pers)
+    pf = rbind(as.matrix(pf), as.matrix(pers))
+    iso = rbind(as.matrix(iso), as.matrix(isolation_mat))
+    print(y)
+  }
+  colnames(pf)[ncol(pf)] = "year"
+  colnames(iso)[ncol(iso)] = "year"
+  year_merge_list = list(data.frame(pf), data.frame(iso))
+  names(year_merge_list) = c()
+  return(year_merge_list)
+}
+tpu = year_merge2(seq(112, 80, -2))
+
+pl_seq = function(y_merge){
+  t13 = y_merge
+  t13[[2]]$eps_diff = c(t13[[2]]$rat_eps[-1], 0)- t13[[2]]$rat_eps
+  t13[[2]]$eps_diff = t13[[2]]$eps_diff * (t13[[2]]$eps_diff >=0)
+  t13[[2]]$eps_diff[which(t13[[2]]$rat_eps == 0)] = 0
+  pf = t13[[1]]
+  t2 = t13[[2]]
+  pf$year = pf$year*2 + 1789
+  t2$year = t2$year*2 + 1789
+  #colnames(t2)[1] = "num_connected_components"
+  p1 = 
+  return(  ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistence in the Senate: Time Series"))
+    (ggplot(pf[which(pf$pid_pct < 1) & which(pf$eps_vec > min(pf$eps_vec)) ,], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistence in the Senate: Time Series"))
+
+  ggplot(t2, aes(weighted_comp_rats, eps_diff, col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+  ggplot(t2, aes(weighted_comp_rats, log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Percentage of Senators in Homogenous connected Component") + ggtitle("Partisan-Epsilon Sensativity")
+  ggplot(t2, aes(weighted_comp_rats/(comp_rats), log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()+ ylab("Logged difference in Epsilon") + xlab("Pct of Senators in Partisan Component Per connected Component") + ggtitle("Scaled Partisan-Epsilon Sensativity")
+  ggplot(t2, aes(exp(weighted_comp_rats), log(eps_diff), col = comp_rats)) + geom_jitter() + facet_wrap(~year)+ coord_flip()
+  
+  pl2 = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Number of Isolated Senators") + ggtitle("Persistent Homology of the Senate: Time Series")
+  pl2 = ggplot(pf[which(pf$pid_pct < 1 ),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistent Homology of the Senate: Time Series")
+  pl2 = ggplot(pf[which(pf$pid_pct < 1) & which(pf$eps_vec > min(pf$eps_vec)) ,], aes(pep, eps_vec))+ geom_point()+ geom_path(data = t2, aes( max(comp_rats) * weighted_comp_rats, rat_eps), col = "green")+ geom_path(data = t2, aes( comp_rats, rat_eps), col = "purple")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01), alpha = .01, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .01, col = "red"), alpha = .01) + coord_flip() + facet_wrap(~year) + ylab("Epsilon") + xlab("Connected Components") + ggtitle("Persistent Homology of the Senate: Time Series")
+  pl2
+  
+  
+  
+}
+
+pl_seq(t13)
+p = pl_seq(tpu)
+p

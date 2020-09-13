@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(shiny)\nlibrary(ggplot2)\nbilz <- read.csv(\"~/Downloads/policy.csv - policy.csv.csv\")\n\nui = fluidPage(\n  # Application title\n  titlePanel(\"Bill Passage\"),\n  \n  # Sidebar with a slider input for number of bins\n  sidebarLayout(\n    sidebarPanel(\n      sliderInput(\"Year\",\n                  \"Number of bins:\",\n                  min = 1981,\n                  max = 2002,\n                  value = 1981),\n      sliderInput(\"turds\",\n                  \"Number of turds:\",\n                  min = 1,\n                  max = 50,\n                  value = 30)\n      \n    ),\n    \n    \n    # Show a plot of the generated distribution\n    mainPanel(\n      plotOutput(\"distPlot\")\n    )\n  )\n)\n\nserver = function(input, output){\n  \n  output$distPlot <- renderPlot({\n    \n    # generate bins based on input$bins from ui.R\n    sup1    <- bilz[which(bilz$YEAR == input$Year), 8]\n    sup2    <- bilz[which(bilz$YEAR == input$Year), 9]\n    \n    # draw the histogram with the specified number of bins\n  plot(sup1, sup2)    \n  })\n  \n  \n}\n\n\nshinyApp(ui = ui, server = server)",
+    "created" : 1508779509142.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3778814673",
+    "id" : "483222E4",
+    "lastKnownWriteTime" : 1508790502,
+    "last_content_update" : 1508790502753,
+    "path" : "~/Documents/shiny1/shiny_proj2.R",
+    "project_path" : "shiny_proj2.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512207386372.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2101772314",
+    "id" : "1F007A1B",
+    "lastKnownWriteTime" : 1513012334,
+    "last_content_update" : 1513012334174,
+    "path" : "~/Documents/shiny1/ShineProj1/some_topology_code.R",
+    "project_path" : "some_topology_code.R",
+    "properties" : {
+        "cursorPosition" : "264,3",
+        "scrollLine" : "244"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

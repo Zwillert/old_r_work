@@ -1,0 +1,84 @@
+---
+title: "datablog1"
+author: "Zach Willert"
+date: "December 21, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=F}
+fil = "/Users/Willert/Documents/shiny1/data_blog/W23_Nov16/ATP W23.sav"
+library(foreign)
+library(ggplot2)
+library(ggridges)
+data = read.spss(fil)
+data2 = data.frame(data)
+colnames(data2)[which(colnames(data2) == "VOTEGENPOST_W23")] = "Voted_for"
+
+
+```
+
+```{r}
+ggplot(subset(data4, Voted_for == "Donald Trump, the Republican" | Voted_for == "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMBLK_W23), as.numeric(THERMO_THERMWHT_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Black People") + ylab("Feelings Towards White People") + guides(alpha = F)
+
+ggplot(subset(data2, Voted_for == "Donald Trump, the Republican" | Voted_for == "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMHISP_W23), as.numeric(THERMO_THERMWHT_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Hispanic People") + ylab("Feelings Towards White People") + guides(alpha = F)
+
+
+ggplot(subset(data2, Voted_for == "Donald Trump, the Republican" | Voted_for == "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMHISP_W23), as.numeric(THERMO_THERMBLK_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Hispanic People") + ylab("Feelings Towards Black People") + guides(alpha = F)
+```
+
+```{r}
+ggplot(subset(data2, Voted_for != "Donald Trump, the Republican" & Voted_for != "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMBLK_W23), as.numeric(THERMO_THERMWHT_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Black People") + ylab("Feelings Towards White People") + guides(alpha = F)
+
+ggplot(subset(data2, Voted_for != "Donald Trump, the Republican" & Voted_for != "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMHISP_W23), as.numeric(THERMO_THERMWHT_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Hispanic People") + ylab("Feelings Towards White People") + guides(alpha = F)
+
+ggplot(subset(data2, Voted_for != "Donald Trump, the Republican" | Voted_for != "Hillary Clinton, the Democrat") , aes(as.numeric(THERMO_THERMHISP_W23), as.numeric(THERMO_THERMBLK_W23), col = Voted_for, alpha = .2)) + geom_jitter() + xlab("Feelings Towards Hispanic People") + ylab("Feelings Towards Black People") + guides(alpha = F)
+
+```
+
+```{r}
+ggplot(data2, aes(x = as.numeric(THERMO_THERMWHT_W23) - as.numeric(THERMO_THERMHISP_W23), y = Voted_for, fill = Voted_for)) + geom_density_ridges() + xlab("Preference of White People to Hispanic People") + ylab("Density") + guides(alpha = F)
+
+ggplot(data2, aes(x = as.numeric(THERMO_THERMWHT_W23) - as.numeric(THERMO_THERMBLK_W23), y = Voted_for, fill = Voted_for)) + geom_density_ridges() + xlab("Preference of White People to Black People") + ylab("Density") + guides(alpha = F)
+
+ggplot(data2, aes(x = as.numeric(THERMO_THERMHISP_W23) - as.numeric(THERMO_THERMBLK_W23), y = Voted_for, fill = Voted_for)) + geom_density_ridges() + xlab("Preference of Hispanic People to Black People") + ylab("Density") + guides(alpha = F)
+```
+
+
+
+
+```{r}
+
+pppd_munge = function(data = data2){
+  for(y in 1:ncol(data)){
+    if(is.factor(data[,y])){
+    if(length(levels(data[,y])) > 10){
+      data[,y] = as.numeric(data[,y])
+     } else {
+        data[,y] = as.factor(as.character(data[,y]))
+     }
+    }
+  }
+  return(data)
+}
+
+data4 = pppd_munge()
+
+ggplot(subset(data4[intersect(which(data4$VOTEDECTIME_W23 != "Refused"), which(data4$REGRETVOTEA_W23 != "Refused")),], Voted_for == "Donald Trump, the Republican" | Voted_for == "Hillary Clinton, the Democrat"), aes(REGRETVOTEA_W23, VOTEDECTIME_W23, col = Voted_for != "Donald Trump, the Republican", alpha = .1 )) + geom_jitter() + facet_wrap(~Voted_for) + guides(col = F)
+
+t1 = table(subset(data4[intersect(which(data4$VOTEDECTIME_W23 != "Refused"), which(data4$REGRETVOTEA_W23 != "Refused")),], Voted_for == "Donald Trump, the Republican")[,c(41,42)])[-5,-3]
+t2 = table(subset(data4[intersect(which(data4$VOTEDECTIME_W23 != "Refused"), which(data4$REGRETVOTEA_W23 != "Refused")),], Voted_for ==  "Hillary Clinton, the Democrat")[,c(41,42)])[-5,-3]
+t1d = data.frame(t1)
+t2d = data.frame(t2)
+t1d$Freq = floor((t1d$Freq/sum(t1)) * 1000)/1000
+t2d$Freq = floor((t2d$Freq/sum(t2)) * 1000)/1000
+t1d$Voted_for = rep( "Don", nrow(t1d))
+t2d$Voted_for = rep( "Hillary", nrow(t2d))
+heat_mat = rbind(t1d, t2d)
+
+ggplot(heat_mat, aes(REGRETVOTEA_W23, VOTEDECTIME_W23, fill = Freq)) + geom_tile() + geom_text(aes(label = Freq)) + scale_fill_gradient2(low = "blue", high = "red") + facet_wrap(~Voted_for) +ylab("When they decided to vote") + xlab("How they would vote now")
+```
+

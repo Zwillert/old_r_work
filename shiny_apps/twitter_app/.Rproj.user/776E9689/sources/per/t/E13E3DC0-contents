@@ -1,0 +1,87 @@
+library(quantmod)
+library(tidyr)
+library(ggplot2)
+library(twitteR)
+
+
+#setup_twitter_oauth("e3jYwJZxRhpPhTIubnJyDPEhq", 
+#"CLJPdUgytagatmPz89N3RxiWXCT68G6UW4NlNlgtREPSvlEaFS")
+
+aa = getSymbols("AAPL",src="yahoo")
+aa = data.frame(AAPL)
+#View(aa)
+
+qGet = function(stock) {
+  getSymbols(as.character(stock),src="yahoo")
+  q = data.frame(stock)
+  
+  q = qmunge(q)
+  return(q)
+}
+
+qmunge = function(qframe){
+  
+  qframe$date = row.names(qframe)
+  qframe = separate(qframe, date, into = c("y", "m", "d"))
+  qframe$y = as.numeric(qframe$y)
+  qframe$m = as.numeric(qframe$m)
+  qframe$d = as.numeric(qframe$d)
+  for (x in 1: nrow(qframe)){
+    qframe$day_count[x] = x
+  } 
+  
+  return(qframe)
+}
+
+
+r_sq = function(qdata, view = F){
+  vars = length(qdata)
+  noms = (names(qdata))
+
+  
+  rMat = matrix(nrow = vars, ncol = vars, dimnames = list(noms, noms))
+  rFrame = data.frame(rMat)
+  for (x in 1:vars){
+    for (y in 1:vars){
+      
+      if (x == y) {
+        rFrame[x,y] = NA
+      } else {
+      mod = lm(qdata[,x] ~ qdata[,y])
+      rFrame[x,y] = summary(mod)$r.squared
+      
+      }
+    }
+  }
+  if (view == F){
+   return(rFrame)
+  } else {
+    View(rFrame)
+  }
+  
+} 
+
+
+for_lag = function(qdata, var){
+  
+  lagData = qdata 
+  
+  for (x in 1:nrow(qdata)){
+    for (y in 1:nrow(qdata)){
+      if((x + y) <= nrow(qdata) ){
+     lagData[y,var] = qdata[y + x,var]
+      } else {lagData[y, var = q]}
+    }  
+    lagData = lagData[-c(1:x),]
+    
+    for (z in 1:ncol(lagData))
+      print(4)
+    mod = lm(lagData[,var], lagData[,z])
+    #sumod = summary(mod)
+    #if (sumod$r.squared > .99){
+  #    print("hooray")
+  #  }
+  } 
+}
+
+

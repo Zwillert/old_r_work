@@ -1,0 +1,79 @@
+library(dplyr)
+library(ggplot2)
+## from https://github.com/tonmcg/County_Level_Election_Results_12-16/blob/master/US_County_Level_Presidential_Results_08-16.csv
+##
+CountPresRes <- read.csv("~/Documents/shiny1/CountPresRes08-16.csv")
+CountPresRes$total_2008[which(CountPresRes$fips_code == 29105)] = CountPresRes$dem_2008[which(CountPresRes$fips_code == 29105)] + CountPresRes$gop_2008[which(CountPresRes$fips_code == 29105)] + CountPresRes$oth_2008[which(CountPresRes$fips_code == 29105)]
+
+CountPresRes08.16 <- CountPresRes
+CountPresRes08.16$dem_2008_pct = CountPresRes08.16$dem_2008/CountPresRes08.16$total_2008
+CountPresRes08.16$dem_2012_pct = CountPresRes08.16$dem_2012/CountPresRes08.16$total_2012
+CountPresRes08.16$dem_2016_pct = CountPresRes08.16$dem_2016/CountPresRes08.16$total_2016
+
+CountPresRes08.16$gop_2008_pct = CountPresRes08.16$gop_2008/CountPresRes08.16$total_2008
+CountPresRes08.16$gop_2012_pct = CountPresRes08.16$gop_2012/CountPresRes08.16$total_2012
+CountPresRes08.16$gop_2016_pct = CountPresRes08.16$gop_2016/CountPresRes08.16$total_2016
+
+CountPresRes08.16$dem_gop_2008_spread_pct = CountPresRes08.16$dem_2008_pct - CountPresRes08.16$gop_2008_pct
+CountPresRes08.16$dem_gop_2012_spread_pct = CountPresRes08.16$dem_2012_pct - CountPresRes08.16$gop_2012_pct
+CountPresRes08.16$dem_gop_2016_spread_pct = CountPresRes08.16$dem_2016_pct - CountPresRes08.16$gop_2016_pct
+
+'
+CountPresRes08.16$dem_2008_2012_change = CountPresRes08.16$dem_2012_pct - CountPresRes08.16$dem_2008_pct
+CountPresRes08.16$dem_2012_2016_change = CountPresRes08.16$dem_2016_pct - CountPresRes08.16$dem_2012_pct
+CountPresRes08.16$dem_2008_2016_change = CountPresRes08.16$dem_2016_pct - CountPresRes08.16$dem_2008_pct
+
+CountPresRes08.16$gop_2008_2012_change = CountPresRes08.16$gop_2012_pct - CountPresRes08.16$gop_2008_pct
+CountPresRes08.16$gop_2012_2016_change = CountPresRes08.16$gop_2016_pct - CountPresRes08.16$gop_2012_pct
+CountPresRes08.16$gop_2008_2016_change = CountPresRes08.16$gop_2016_pct - CountPresRes08.16$gop_2008_pct
+'
+# dem advantage t1 - dem advantage t0
+CountPresRes08.16$dem_gop_spread_2008_2012_change = CountPresRes08.16$dem_gop_2012_spread_pct - CountPresRes08.16$dem_gop_2008_spread_pct
+CountPresRes08.16$dem_gop_spread_2012_2016_change = CountPresRes08.16$dem_gop_2016_spread_pct - CountPresRes08.16$dem_gop_2012_spread_pct
+CountPresRes08.16$dem_gop_spread_2008_2016_change = CountPresRes08.16$dem_gop_2016_spread_pct - CountPresRes08.16$dem_gop_2008_spread_pct
+
+
+newdt = left_join(mydta, CountPresRes08.16, by = c("fips" = "fips_code"))
+  
+#write.csv(newdt, "prez_elec_history_data.csv")
+fillana = function(){
+anadt = newdt[,-c(62, 63, 1:5)]
+#anadt = anadt[c(1:10),c(1:10)]
+anadt = na.omit(anadt)
+ana = matrix(nrow = ncol(anadt), ncol = ncol(anadt))
+for(x in 1:ncol(anadt)){
+  for(y in x:ncol(anadt)){
+    ana[x,y] = summary(lm(anadt[,x] ~ anadt[,y]))$r.squared
+    #print(summary(lm(newdt[,x] ~ newdt[,y]))$r.squared)
+  }
+  print(x/ncol(anadt))
+}
+rownames(ana) = colnames(anadt)
+colnames(ana) = colnames(anadt)
+return(ana)
+}
+
+
+findrsq = function(){
+  vec = c()
+  vec2 = c()
+  for(x in c(20:100)){
+   newdt$dummy = 0
+   newdt$dummy[which(newdt$white_alone > x)] = 1
+   #summary(lm(newdt$dem_gop_spread_2012_2016_change ~ newdt$white_alone + newdt$dummy + newdt$dummy * newdt$white_alone))
+   vec = c(vec, x)
+   vec2 = c(vec2, summary(lm(newdt$dem_gop_spread_2012_2016_change ~ newdt$white_alone + newdt$dummy + newdt$dummy * newdt$white_alone))$r.squared)
+  }
+  return(cbind(vec, vec2))
+}
+
+
+mung <- merge(gcounty, newdt, all.x = TRUE)
+mung <- arrange(mung, order)
+mung <- left_join(gcounty, newdt)
+
+ggplot(mung) + geom_polygon(aes(long, lat, group = group, fill = dem_gop_spread_2012_2016_change)) + scale_fill_distiller(palette = "RdBu", direction = 1) +coord_map("bonne", parameters=45)
+ggplot(newdt, aes(white_alone, dem_gop_spread_2012_2016_change * -1, size = pop_2014, col = dem_gop_2016_spread_pct))+ geom_point() + scale_color_gradient2(low = "red", high = "blue", mid = "white") + geom_smooth() + facet_wrap(~dem_gop_2016_spread_pct > .5)
+
+
+

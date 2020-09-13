@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(shiny)\n\nui = fluidPage()\nserver = function(input, output){\n  \n}\nshinyApp(ui = ui, server = server)",
+    "created" : 1508891782079.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1663724470",
+    "id" : "10C4372",
+    "lastKnownWriteTime" : 1508781995,
+    "last_content_update" : 1508781995,
+    "path" : "~/Documents/shiny1/shiny_temp1.R",
+    "project_path" : "shiny_temp1.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513065254518.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1039171776",
+    "id" : "1401C11A",
+    "lastKnownWriteTime" : 1513066972,
+    "last_content_update" : 1513066972080,
+    "path" : "~/Documents/shiny1/shiny_stock1.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "36,122",
+        "scrollLine" : "16"
+    },
+    "relative_order" : 12,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513049899125.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "155|32|163|2|\n165|32|181|2|\n183|33|223|2|\n269|34|320|2|\n",
+    "hash" : "3615560652",
+    "id" : "5ECC6CFA",
+    "lastKnownWriteTime" : 1513053398,
+    "last_content_update" : 1513053398460,
+    "path" : "~/Documents/shiny1/election_compare2.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "63,0",
+        "scrollLine" : "54"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

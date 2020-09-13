@@ -1,0 +1,215 @@
+library(wnominate)
+library(tidyr)
+library(ggplot2)
+
+gen_k_string = function(y, chamber = "S"){
+  
+  if (is.numeric(y)){
+    if (y < 10){
+      y = paste("0",as.character(y), sep = "")
+    } else {
+      y =  as.character(y)
+    }
+  } else {
+    y =  as.character(y)
+  }
+  
+  y_string = y
+  print(y_string)
+  #call_str = paste("ftp://k7moa.com/dtaord/",chamber,y_string,"kh.ord", sep = "")
+  call_str = paste("https://voteview.com/static/data/out/votes/",chamber,y_string,"_votes.ord", sep = "")
+  
+  return(call_str)
+}
+
+parse_year = function(y, chamber = "S"){
+  call_str = gen_k_string(y, chamber)
+  KH = parse_roll_call(readKH(call_str))
+  return(KH)
+}
+
+parse_roll_call = function(KH_OBJ){
+  
+  KH_OBJ$votes[which(KH_OBJ$votes %in% KH_OBJ$codes$yea)] = 2
+  KH_OBJ$votes[which(KH_OBJ$votes %in% KH_OBJ$codes$nay)] = 1
+  KH_OBJ$votes[which(KH_OBJ$votes %in% KH_OBJ$codes$missing)] = 0
+  KH_OBJ$votes[which(KH_OBJ$votes %in% KH_OBJ$codes$notInLegis)] = -1
+  
+  KH_OBJ$codes$yea = 2
+  KH_OBJ$codes$nay = 1
+  KH_OBJ$codes$missing = 0
+  KH_OBJ$codes$notInLegis = -1
+  
+  return(KH_OBJ)
+}
+
+just_votes = function(KH_OBJ){
+  if (!is.list(KH_OBJ)){
+    return(data.frame(KH_OBJ[-1,]))
+  }
+  return(data.frame(KH_OBJ[[1]][-1,]))
+  
+}
+
+gen_poly_poli_list = function(years, chamber = "sen"){
+  
+  if (chamber == "senate" | chamber == "Senate" | chamber == "Sen"){ chamber = "sen"}
+  if (chamber != "sen"){chamber = "hou"}
+  final_list = list()
+  dex = 0
+  for (y in years){
+    
+    dex = dex+1
+    KH = list(parse_year(y = y, chamber = chamber))
+    #return(list(KH))
+    final_list[dex] =  KH
+    print(length(final_list))
+    names(final_list)[dex] = paste(chamber, as.character(y), sep = "_")  
+  }
+  return(final_list)
+}
+
+
+bills_data = function(roll_call){
+ # pids = unique(roll_call$legis.data)
+  votes = roll_call$votes
+ # names = c("num_yea", "num_nay", "num_miss")
+  
+  num_yea = c()
+  num_nay = c()
+  num_miss = c()
+  
+  num_dem_yea = c()
+  num_dem_nay = c()
+  num_dem_miss = c()
+  
+  num_rep_yea = c()
+  num_rep_nay = c()
+  num_rep_miss = c()
+  
+  num_ind_yea = c()
+  num_ind_nay = c()
+  num_ind_miss = c()
+  
+  pct_dem_yea = c()
+  pct_dem_nay = c()
+  pct_rep_yea = c()
+  pct_rep_nay = c()
+  
+  pct_yea_dem = c()
+  pct_nay_dem = c()
+  pct_yea_rep = c()
+  pct_nay_rep = c()
+  
+  party_gap = c()
+  
+  for(b in 1:ncol(votes)){
+  num_yea = c(num_yea, sum(votes[,b] == 2))
+  num_nay = c(num_nay, sum(votes[,b] == 1))
+  num_miss = c(num_miss, sum(votes[,b] == -1))
+  
+  num_dem_yea = c(num_dem_yea, sum(votes[which(roll_call$legis.data$party == "D"),b] == 2))
+  num_dem_nay = c(num_dem_nay, sum(votes[which(roll_call$legis.data$party == "D"),b] == 1))
+  num_dem_miss = c(num_dem_miss, sum(votes[which(roll_call$legis.data$party == "D"),b] == -1))
+  
+  num_rep_yea = c(num_rep_yea, sum(votes[which(roll_call$legis.data$party == "R"),b] == 2))
+  num_rep_nay = c(num_rep_nay, sum(votes[which(roll_call$legis.data$party == "R"),b] == 1))
+  num_rep_miss = c(num_rep_miss, sum(votes[which(roll_call$legis.data$party == "R"),b] == -1))
+  
+  num_ind_yea = c(num_ind_yea, sum(votes[which(roll_call$legis.data$party == "Indep"),b] == 2))
+  num_ind_nay = c(num_ind_nay, sum(votes[which(roll_call$legis.data$party == "Indep"),b] == 1))
+  num_ind_miss = c(num_ind_miss, sum(votes[which(roll_call$legis.data$party == "Indep"),b] == -1))
+  
+  pct_dem_yea = c(pct_dem_yea, sum(votes[which(roll_call$legis.data$party == "D"),b] == 2)/(sum(votes[which(roll_call$legis.data$party == "D"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "D"),b] == 1)))
+  pct_dem_nay = c(pct_dem_nay, sum(votes[which(roll_call$legis.data$party == "D"),b] == 1)/(sum(votes[which(roll_call$legis.data$party == "D"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "D"),b] == 1)))
+  pct_rep_yea = c(pct_rep_yea, sum(votes[which(roll_call$legis.data$party == "R"),b] == 2)/(sum(votes[which(roll_call$legis.data$party == "R"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "R"),b] == 1)))
+  pct_rep_nay = c(pct_rep_nay, sum(votes[which(roll_call$legis.data$party == "R"),b] == 1)/(sum(votes[which(roll_call$legis.data$party == "R"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "R"),b] == 1)))
+  
+  pct_yea_dem = c(pct_yea_dem, sum(votes[which(roll_call$legis.data$party == "D"),b] == 2)/sum(votes[,b] == 2))
+  pct_nay_dem = c(pct_nay_dem, sum(votes[which(roll_call$legis.data$party == "D"),b] == 1)/sum(votes[,b] == 1))
+  pct_yea_rep = c(pct_yea_rep, sum(votes[which(roll_call$legis.data$party == "R"),b] == 2)/sum(votes[,b] == 2))
+  pct_nay_rep = c(pct_nay_rep, sum(votes[which(roll_call$legis.data$party == "R"),b] == 1)/sum(votes[,b] == 1))
+  
+  party_gap = c(party_gap, sum(votes[which(roll_call$legis.data$party == "D"),b] == 2)/(sum(votes[which(roll_call$legis.data$party == "D"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "D"),b] == 1)) - sum(votes[which(roll_call$legis.data$party == "R"),b] == 2)/(sum(votes[which(roll_call$legis.data$party == "R"),b] == 2) + sum(votes[which(roll_call$legis.data$party == "R"),b] == 1)))
+  }
+  party_gap = abs(party_gap)
+  valvec = c(1:ncol(votes))
+  ordvec = c()
+  while(length(valvec) > 0){
+    vals = party_gap[valvec]
+    dex = which.max(vals)
+    ordvec = c(ordvec, valvec[dex])
+    valvec = valvec[-dex]
+    
+  }
+  
+  ordvec[ordvec] = c(1:ncol(votes))
+  return(data.frame(cbind(party_gap, ordvec, num_yea, num_nay, num_miss, num_dem_yea, num_dem_nay, num_dem_miss, num_rep_yea, num_rep_nay, num_rep_miss, num_ind_yea, num_ind_nay, num_ind_miss, pct_dem_yea, pct_dem_nay, pct_rep_yea, pct_rep_nay, pct_yea_dem, pct_nay_dem, pct_yea_rep, pct_nay_rep)))
+  
+}
+
+legis_data = function(roll_call, prez = T){
+  
+  legis = roll_call$legis.data
+  legis$rep_unity = 0
+  legis$dem_unity = 0
+  votes = roll_call$votes
+  
+  if(prez == F){
+    legis = legis[-1,]
+    votes = votes[-1,]
+  }
+  
+  ddex = which(legis$party == "D")
+  rdex = which(legis$party == "R")
+  
+  dmost = c()
+  rmost = c()
+  
+  for(r in 1:ncol(votes)){
+    dmost = c(dmost, as.numeric(names(table(votes[ddex, r]))[which.max(table(votes[ddex, r]))[[1]]][[1]])) 
+    rmost = c(rmost, as.numeric(names(table(votes[rdex, r]))[which.max(table(votes[rdex, r]))[[1]]][[1]])) 
+  }
+  #View(cbind(dmost, rmost))
+  for(l in 1:nrow(legis)){
+    legis$rep_unity[l] = sum(votes[l,] == rmost)/ncol(votes)
+    legis$dem_unity[l] = sum(votes[l,] == dmost)/ncol(votes)
+    #print(legis[l,] == dmost)
+  }
+  return(legis)
+}
+
+plot_gather = function(roll_call){
+  votes = data.frame(roll_call$votes)
+  votes$mem = c(1:nrow(votes))
+  fin = gather(votes, key = mem, value = "voteval")
+  names(fin)[2] = "vote"
+  fin = separate(fin,col = vote, c("vote2", "vote"), sep = "Vote.")[,-2]
+  fin$vote = as.numeric(fin$vote)
+  fin$party = as.character(roll_call$legis.data$party[fin$mem])
+  fin$party[which(fin$party == "D")] = 1
+  fin$party[which(fin$party == "R")] = -1
+  fin$party[which(fin$party == "Indep")] = 0
+  return(fin)
+}
+
+plot_polish = function(roll_call, prez = F){
+  
+  rc = roll_call
+  
+  if(prez == F){
+  rc$votes = rc$votes[-1,]
+  rc$legis.data = rc$legis.data[-1,]
+  }
+  
+  legisdt = legis_data(rc)
+  billdt = bills_data(rc)
+  plotdt = plot_gather(rc)
+  
+  memord = c(1:length(legisdt$rep_unity))
+  memord[order(legisdt$rep_unity)] = memord
+  memord2 = memord
+  memord = plotdt$mem[memord]
+  billord = billdt$ordvec[plotdt$vote]
+  return(list(data.frame(plotdt, memord, billord), billdt, data.frame(legisdt, memord2)))
+}

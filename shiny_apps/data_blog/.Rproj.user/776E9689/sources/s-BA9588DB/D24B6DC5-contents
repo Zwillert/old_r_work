@@ -1,0 +1,180 @@
+library(quantmod)
+library(shiny)
+
+data_list = 1
+
+plot_options = c("Add Average True Range", "Add Bollinger Bands", "Add Chaiken Money Flow", "Add Double Exponential Moving Average", "Add Detrended Price Oscillator", "Add Exponential Moving Average", "Add Price Envelope", "Add Exponential Volume Weigthed Moving Average", "Add Moving Average Convergence Divergence", "Add Momentum","Add Rate of Change", "Add Relative Strength Indicator",  "Add Parabolic Stop and Reverse", "Add Simple Moving Average",  "Add Stocastic Momentum Index", "Add Triple Smoothed Exponential Oscillator", "Add Volume", "Add Welles Wilder's Directional Movement Indicator", "Add Weighted Moving Average")
+
+ui = fluidPage(
+  tabsetPanel(
+    
+  tabPanel(title = "Stock Plotting",
+  h1("Stock Plotting App"),
+  sidebarLayout(
+    sidebarPanel(
+      p("Type in a stock ID to see a graph."),
+      textInput("stock", "Stock ID", value = "AAPL"),
+      dateInput("startdate", "Start Date", value = Sys.Date() - 365),
+      dateInput("enddate", "End Date", value = Sys.Date()),
+      submitButton("Apply Changes"), 
+      checkboxGroupInput("extras", "Plotting Fancies", plot_options)),
+    mainPanel(
+      textOutput(outputId = "text"), 
+      plotOutput("stockchart")) 
+    ))
+  
+  ## functionality yet to implement ## 
+  #,  
+  #tabPanel(title = "Stock Prediction"),
+  #tabPanel(title = "Trading Simulator", 
+  #    dateInput("simstartdate", "Start Date", value = Sys.Date() - 365),
+  #    dateInput("simenddate", "End Date", value = Sys.Date()),
+  #    numericInput("startVal", "Initial Money", min = 0, max = NA, value = 100),
+  #    numericInput("commission", "Commission Fee Per Trade", min = 0, max = 20, value = 5),
+  #    textInput("stock2", "Stock ID", value = "AAPL"),
+  #    submitButton("Add Stock"), 
+  #    #checkboxGroupInput("strategies", "Trading Strategies", c("1", "2", "3")),
+  #    plotOutput("valchart"),
+  #    plotOutput("simchart"),
+  #    plotOutput("listchart")
+  #    )
+  )
+  )
+
+server = function(input, output, session){
+
+  names = c()
+  
+  
+  
+  output$listchart = renderPlot({ 
+    if(input$stock2 %in% names){
+      print("You already have this one...")
+    } else {
+      names = c(names, input$stock2)
+      stock_data = getSymbols(input$stock2, from = input$simstartdate, to = input$simenddate, auto.assign = FALSE)
+      stockDta2 = data.frame(stock_data[,c(1,4)])
+      stockDta2$Date = index(stock_data)
+      stockDta2$stock = rep(input$stock2, nrow(stock_data))
+      colnames(stockDta2) = c("Open", "Close", "Date", "Stock")
+      View(stockDta2)
+      if(length(data_list) == 1){
+        data_list <<- stockDta2
+      } else {
+      data_list <<- rbind(data_list, stockDta2)
+      }
+      View(data_list)
+    }
+    ggplot(data_list, aes(Date, Open/(min(Open)), col = Stock)) + geom_path() + ylab("Price (As Percent of Stock Minimum")
+  })
+
+  make_string = function(inp){
+    if(inp == "Add Bollinger Bands"){
+      return("addBBands()")
+    } else if (inp == "Add Chaiken Money Flow"){
+      return("addCMF()")
+    } else if (inp == "Add Double Exponential Moving Average"){
+      return("addDEMA()")
+    } else if (inp == "Add Exponential Moving Average"){
+      return("addEMA()")
+    } else if (inp == "Add Detrended Price Oscillator"){
+      return("addDPO()")
+    } else if (inp == "Add Price Envelope"){
+      return("addEnvelope()")
+    } else if (inp == "Add Exponential Volume Weigthed Moving Average"){
+      return("addEVWMA()")
+    } else if (inp == "Add Price Envelope"){
+      return("addEnvelope()")
+    } else if (inp == "Add Moving Average Convergence Divergence"){
+      return("addMACD()")
+    } else if (inp == "Add Momentum"){
+      return("addMomentum()")
+    } else if (inp == "Add Rate of Change"){
+      return("addROC()")
+    } else if (inp == "Add Relative Strength Indicator"){
+      return("addRSI()")
+    } else if (inp == "Add Parabolic Stop and Reverse"){
+      return("addSAR()")
+    } else if (inp == "Add Simple Moving Average"){
+      return("addSMA()")
+    } else if (inp == "Add Stocastic Momentum Index"){
+      return("addSMI()")
+    } else if (inp == "Add Triple Smoothed Exponential Oscillator"){
+      return("addTRIX()")
+    } else if (inp == "Add Volume"){
+      return("addVo()")
+    } else if (inp == "Add Weighted Moving Average"){
+      return("addWMA()")
+    } else if (inp == "Add Average True Range"){
+      return("addATR()")
+    } else if (inp == "Add Welles Wilder's Directional Movement Indicator"){
+      return("addADX()")
+    } 
+  }
+  
+  sim_trading = function(){
+    
+    sdate = input$simstartdate
+    edate = input$simenddate
+    stock = toupper(input$stock)
+    output$text = renderText({""})
+    tryCatch(getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE),
+             warning = function(w) {
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+               print("warning"); 
+             },
+             error = function(e) {
+               print("error");
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+             }
+    ) 
+    stock = getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE)
+    
+    for(x in 1:nrow(stock)){
+      
+    }
+  }
+  
+  graphString = ""
+  
+  output$stockchart = renderPlot({
+    extras = input$extras
+    
+    if(length(extras) > 1){
+      graphString = paste(graphString, make_string(extras[1]), sep = "")
+      extras = extras[-1]
+      for(ex in extras){
+        graphString = paste(graphString, make_string(extras[1]), sep = ";")
+      }
+    } else if (length(extras) == 1){
+      graphString = paste(graphString, make_string(extras), sep = "")
+    }
+    sdate = input$startdate
+    edate = input$enddate
+    stock = toupper(input$stock)
+    output$text = renderText({""})
+    tryCatch(getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE),
+             warning = function(w) {
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+               print("warning"); 
+             },
+             error = function(e) {
+               print("error");
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+             }
+    ) 
+    stock = getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE)
+    print(graphString)
+    if((graphString) != ""){
+      print(length(graphString))
+      chartSeries(stock, up.col = "blue", dn.col = "red", theme = "white", type = "bars", name = paste(toupper(input$stock), "Time Series Graph"), TA = graphString)
+    } else {
+      chartSeries(stock, up.col = "blue", dn.col = "red", theme = "white", type = "bars", name = paste(toupper(input$stock), "Time Series Graph"))
+    }
+    
+  })
+  
+  
+}
+
+shinyApp(ui = ui, server = server)

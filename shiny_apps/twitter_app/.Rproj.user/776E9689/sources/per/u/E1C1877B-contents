@@ -1,0 +1,4 @@
+library(quantmod)
+
+getSymbols("AAPL")
+chart_Series(AAPL)

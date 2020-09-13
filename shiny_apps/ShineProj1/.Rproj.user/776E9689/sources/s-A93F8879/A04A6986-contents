@@ -1,0 +1,152 @@
+#####                                                        #####
+##### Shiny app to view Senate roll call and legislator data #####
+#####                                                        #####
+##### Import Packages and Data #####
+### Sourcing 
+source('~/Documents/shiny1/legisshine_support.R', echo=TRUE)
+source('~/Documents/shiny1/legisshine.R', echo=TRUE)
+### Packages 
+library(shiny)
+library(dendextend)
+library(gridExtra)
+library(grid)
+library(ggdendro)
+### Data
+sen_unity <- read.csv("~/Google Drive/Old_drive/Mac/4th Year/Fall/Math 432: Modeling/Math 432: Final Project/new_data/sen_unity.csv")
+sen_peeps <- read.csv("~/Downloads/sen_peeps.csv")
+rollcall_senate_all <- read.csv("~/Downloads/rollcall_senate_all.csv")
+peeps = c()
+##### Import Packages and Data #####
+#####         #####
+##### UI Code #####
+#####         #####
+ui=shinyUI(fluidPage(
+  tabsetPanel(id = "main",
+    
+  tabPanel("Congress Summary", 
+    sidebarLayout(
+    sidebarPanel(
+    numericInput(inputId = "year", label = "year", value = 113),
+    selectInput("dtOut", "View Data Selection", choices = c("Raw Data", "Legislator data", "Bills Data"), selected = "Raw Data"), 
+    uiOutput("uio"),
+    actionButton("act", "Apply Changes")
+    #,
+    #actionButton("add", "Add UI")
+    ), 
+    mainPanel(
+    dataTableOutput("dataTable"))
+    )),
+  
+  tabPanel("p1", plotOutput("plot1")),
+  
+  tabPanel("p2", plotOutput("plot2")),
+  
+  tabPanel("p3", 
+    selectInput("coord", "Coodinates", c("Polar", "Cartesian"), selected = "Polar"),         
+    plotOutput("plot3", width = 500, height = 500)
+    ),
+  
+  tabPanel("p4", plotOutput("plot4"))
+)))
+#####         #####
+##### UI Code #####
+#####         #####
+#####             #####
+##### Server Code #####
+#####             #####
+server=shinyServer(function(input, output) {
+##### Render Legis Select UI #####
+  output$uio <- renderUI({
+    sens <- peeps
+    selectInput("sens", "Senators", sens)
+  })
+#  observeEvent(input$add, {
+#    output$uio <- renderUI({
+#      sens <- peeps
+#      selectInput("sens", "Senators", sens)
+#    })
+#  })
+##### Render Legis Select UI #####
+##### Process Data #####
+  observeEvent(input$act, {
+  
+  yr = input$year
+  chm = "sen"
+  saved_yrs = 113
+  if(yr %in% saved_yrs){
+    LyearT = y13
+    print("Howdy")
+    } else {
+    LyearT = parse_year(yr, chamber = chm)
+  }
+  
+  peeps <<- rownames(LyearT$votes)
+  perT = persistence(ydta = LyearT)
+  yearT = year_m(perT)
+  pf = yearT[[1]]
+##### Process Data #####
+##### Data Table Render #####
+  output$uio <- renderUI({
+    sens <- peeps
+    selectInput("sens", "Senators", sens)
+  })
+  output$dataTable = renderDataTable({
+    dt = LyearT$votes
+    dt = cbind(rownames(dt), dt)
+    colnames(dt)[1] = "Senator"
+    dt[which(dt == 2)] = "Yea"
+    dt[which(dt == 1)] = "Nay"
+    dt[which(dt == -1)] = "Absent"
+    if (input$dtOut == "Raw Data"){
+      dt
+    } else if (input$dtOut == "Legislator data"){
+      if(length(which(sen_peeps$Cong == yr)) == length(which(sen_unity$congr_number == yr))){
+        cbind(sen_unity[which(sen_unity$congr_number == yr),], sen_peeps[which(sen_peeps$Cong == yr),-c(1:7)])
+      } else {
+        sen_peeps[which(sen_peeps$Cong == yr),]
+      }
+    } else if (input$dtOut == "Bills Data"){
+      takeout = c(1,2)
+      rollcall_senate_all[which(rollcall_senate_all$congress == yr),-takeout]
+    }
+  })
+##### Data Table Render #####
+##### Plot Making #####
+  expv = expand_votes_v(LyearT$votes)
+  hc = hclust(dist(expv))
+  hc$labels = rownames(LyearT$votes)
+  hc$labels_col = LyearT$legis.data$party
+  dc = as.dendrogram(hc)
+  labels_colors(dc) <- c("blue", "green", "red")[hc$labels_col][order.dendrogram(dc)]
+  dc2 = highlight_branches_lwd(dc)
+  dc3 = dc2 %>% set("branches_k_color", k = 3, value = c("orange", "red", "blue"))
+  gold = ggplot(pf[which(pf$pid_pct < 1),], aes(pep, eps_vec))+ geom_point()+ geom_path(data = yearT[[2]], aes( 99 * weighted_comp_rats, rat_eps), col = "green")+ geom_point(data = pf[which(pf$pid == 100 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05), alpha = .05, col = "blue") + geom_point(data = pf[which(pf$pid == 200 & pf$pid_pct == 1),], aes(pep, eps_vec, alpha = .05, col = "red"), alpha = .05) + coord_flip() + facet_wrap(~(year * 2 + 1789))
+  pl = plot_polish(LyearT)
+  pl2 = pl[[1]]
+  tplt = ggplot(pl2) + geom_point(data = pl2[which(pl2$voteval == 2),], aes(billord, memord, col = party), size = .1) + geom_point(data = pl2[which(pl2$voteval == 1),], aes(billord, memord), size = .1) + geom_point(data = pl2[which(pl2$voteval == -1),], aes(billord, memord, col = party), size = .1, alpha = .1)
+##### Plot Making #####
+##### Plot Render #####
+  output$plot1 <- renderPlot({
+    gold
+  })
+  output$plot2 <- renderPlot({
+    tplt
+  })
+  output$plot3 <- renderPlot({
+    if(input$coord == "Polar"){
+    par(cex = .3)
+    circlize_dendrogram(dc3)
+    } else {
+      ggdendrogram(dc3) + coord_flip()
+    }
+  })
+  output$plot4 = renderPlot({
+    ggplot(pl[[3]], aes(dem_unity)) + geom_density()
+  })
+##### Plot Render #####
+  })
+})
+#####             #####
+##### Server Code #####
+#####             #####
+shinyApp(ui,server)

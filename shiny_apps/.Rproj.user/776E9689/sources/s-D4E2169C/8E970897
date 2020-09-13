@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1515961117911.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "74|30|116|2|\n143|34|178|2|\n",
+    "hash" : "0",
+    "id" : "8E970897",
+    "lastKnownWriteTime" : 1516304866,
+    "last_content_update" : 1516304866529,
+    "path" : "~/Documents/shiny1/stock_app/app.R",
+    "project_path" : "stock_app/app.R",
+    "properties" : {
+        "cursorPosition" : "58,67",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

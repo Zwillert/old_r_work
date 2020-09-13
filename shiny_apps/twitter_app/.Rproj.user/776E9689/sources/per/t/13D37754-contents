@@ -1,0 +1,41 @@
+library(quantmod)
+library(shiny)
+
+ui = fluidPage(
+  h1("Stock Plotting App"),
+  sidebarLayout(
+    sidebarPanel(
+      p("Type in a stock ID to see a graph."),
+      textInput("stock", "Stock ID", value = "AAPL"),
+      dateInput("startdate", "Start Date", value = "2015-10-24"),
+      dateInput("enddate", "End Date", value = "2017-10-24"),
+      submitButton("Apply Changes")
+    ),
+    mainPanel(textOutput(outputId = "text"),
+              plotOutput("stockchart")) 
+  )
+)
+
+server = function(input, output){
+  output$stockchart = renderPlot({
+    sdate = input$startdate
+    edate = input$enddate
+    stock = toupper(input$stock)
+    output$text = renderText({""})
+    tryCatch(getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE),
+             #output$text = renderText({""}),
+             warning = function(w) {
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+               print("warning"); 
+             },
+             error = function(e) {
+               print("error");
+               output$text = renderText({"Doesn't Seem to be working... try something else"})
+             }
+    ) 
+    stock = getSymbols(stock, from = sdate, to = edate, auto.assign = FALSE)
+    chartSeries(stock, up.col = "blue", dn.col = "red", theme = "white", type = "bars", name = paste(toupper(input$stock), "Time Series Graph"))
+  })
+}
+
+shinyApp(ui = ui, server = server)

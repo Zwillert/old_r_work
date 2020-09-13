@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1513142479594.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "E908AC66",
+    "lastKnownWriteTime" : 2318354851943511808,
+    "last_content_update" : 1513142479594,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "2E207EC1",
+        "caption" : "mungeD",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=mungeD&cache_key=2E207EC1",
+        "displayedObservations" : 236,
+        "environment" : "",
+        "object" : "mungeD",
+        "preview" : 0,
+        "totalObservations" : 236,
+        "variables" : 21
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

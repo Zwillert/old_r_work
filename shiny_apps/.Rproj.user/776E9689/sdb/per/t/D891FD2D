@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(quantmod)\nlibrary(shiny)\n \n ui = fluidPage(\n   sidebarLayout(\n    sidebarPanel(\n      fileInput(\"file1\", \"File Upload\" ),\n      dataTableOutput(\"dtable1\")\n    ),\n     mainPanel(plotOutput(\"stockchart\")) \n   )\n )\n \n server = function(input, output){\n   \n   output$dtable1 = renderDataTable({\n     df = data.frame(read.csv(input$file1))\n     countydata\n     df\n   })\n   \n   output$stockchart = renderPlot({\n     data1 = input$file1\n     \n   })\n }\n \n \n \n \n shinyApp(ui = ui, server = server)\n \n ",
+    "created" : 1508890501071.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1080806559",
+    "id" : "D891FD2D",
+    "lastKnownWriteTime" : 1508963065,
+    "last_content_update" : 1508963065012,
+    "path" : "~/Documents/shiny1/shiny_anaysis1.R",
+    "project_path" : "shiny_anaysis1.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
